@@ -110,12 +110,20 @@ type Locations = {
 };
 
 /**
- * Represents the outcome of a parking search or query, detailing a parking
+ * Represents the outcome of a parking search, detailing a parking
  * spot by its graph node identifier, its name for easy identification, and
  * the distance from a specified starting point or reference location.
+ * @template node The unique identifier corresponding to a node in
+ *           the graph that represents the mapped area. This identifier is used
+ *           to locate the parking spot within the graph's structure.
+ * @template name A name or label for the parking spot.
+ *           This could be an official name, a designation code, or any label.
+ * @template distance The calculated distance from a specified start
+ *           point to this parking spot. The distance measurement can be in units
+ *           appropriate to the application, such as meters or kilometers, and
+ *           represents how far a user would need to travel to reach this parking
+ *           from the start location.           
  */
-
-
 type findparking = {
     node: number
     name:string
@@ -123,13 +131,26 @@ type findparking = {
 
 };
 
+/**
+ * A collection of all available parking lots within the program's scope. This constant
+ * provides a list of parking information, making it easier to manage and access
+ * parking data throughout the program. Each parking lot is associated with a specific
+ * node in the graph, representing its location, and is identified by a name.
+ */
 const All_Parking_lots: Parking_lot = {
-    list_of_all_parking: [{node_number:2, name: "Hemköp"}, {node_number: 3, name: "Studenternas"}, {node_number: 4, name: "Grimhild"}],
+    list_of_all_parking: [{node_number:2, name: "Hemköp"}, 
+                          {node_number: 3, name: "Studenternas"}, 
+                          {node_number: 4, name: "Grimhild"}],
     number_of_parking: 3
 }; 
 
+/**
+ * This constant represents list of locations relevant 
+ * to the program
+ */
 const All_places: Locations = {
-    list_of_all_places: [{node_number:0, name: "Ångström"}, {node_number: 1, name: "Centralen"}],
+    list_of_all_places: [{node_number:0, name: "Ångström"}, 
+                         {node_number: 1, name: "Centralen"}],
     number_of_places: 2
 }; 
 
@@ -170,8 +191,7 @@ export function enqueue<T>(prio: number, e: T, q: Prio_Queue<T>) {
  * @returns a record with parent to node and distance from start node
  * 
  */
-
-function Dijkstra_alg(Graph: WeightedAdjacencyList, startNode: number): Parents_and_distance {
+function Dijkstras_alg(Graph: WeightedAdjacencyList, startNode: number): Parents_and_distance {
     const size: number = Graph.size
     const parents: Array<number | null> = build_array(size, () => null); 
     const distance: Array<number> = build_array(size, () => Infinity); 
@@ -228,25 +248,26 @@ function Dijkstra_alg(Graph: WeightedAdjacencyList, startNode: number): Parents_
  * @precondition Graph can't have negative weight values
  * @returns an array with the names of the parking lots in order from closest to furthest from startnode
  */
-
 function Find_Parking_lots(Graph: WeightedAdjacencyList, startnode: number): Array<string>{
-    const result = Dijkstra_alg(Graph, startnode);
+    const result = Dijkstras_alg(Graph, startnode);
     const distance = result.distances;
     const parking_lots = All_Parking_lots.list_of_all_parking;
     const number_of_parking_lots = All_Parking_lots.number_of_parking;
-    let parking_id: Array<parking_info> = [];
+    let parking_information: Array<parking_info> = [];
     let parking_all_info: Array<findparking> = [];
 
     for ( let i = 0; i < number_of_parking_lots; i = i + 1) { 
         const parking = parking_lots[i];
-        parking_id.push(parking); 
+        parking_information.push(parking); 
     }
 
-    for (let j = 0; j < parking_id.length; j = j + 1) {
-        const parking_inf = parking_id[j];
-        const node = parking_inf.node_number;
+    for (let j = 0; j < parking_information.length; j = j + 1) {
+        const current_parking_info = parking_information[j];
+        const node = current_parking_info.node_number;
         const distance_from_start = distance[node];
-        const Parking_node_name_distance: findparking = { node: node, name: parking_inf.name, distance: distance_from_start};
+        const Parking_node_name_distance: findparking = { node: node, 
+                                                          name: current_parking_info.name, 
+                                                          distance: distance_from_start};
         parking_all_info.push(Parking_node_name_distance);
     }
 
@@ -254,15 +275,11 @@ function Find_Parking_lots(Graph: WeightedAdjacencyList, startnode: number): Arr
 
     const Parking_lot_names = sorted_parking_lots.map(lot => lot.name);
 
-
     return Parking_lot_names;
 }
 
 
-
-
-
-const graph1: WeightedAdjacencyList = {
+const graph_uppsala: WeightedAdjacencyList = {
    
     adj: [
     // Node 0 is connected to Node 1 with a weight of 10, and Node 2 with a weight of 3
@@ -277,6 +294,7 @@ const graph1: WeightedAdjacencyList = {
     // Node 3 is connected back to Node 1 with a weight of 5, and to Node 2 with a weight of 8
     list({ target: 0, weight: 5 }, { target: 1, weight: 8 }, {target: 2, weight: 4}, {target: 4, weight: 6}),
    
+    //node 4 is connected to node 1 with a weight of 3 and to node 3 with a weight of 6
     list({ target: 1, weight: 3 }, {target: 3, weight: 6}),
 
   ],
@@ -284,7 +302,6 @@ const graph1: WeightedAdjacencyList = {
   size: 5
 
 }; 
-    
-    
-console.log(Dijkstra_alg(graph1, 0));
-console.log(JSON.stringify(Find_Parking_lots(graph1, 0)));
+       
+console.log(Dijkstras_alg(graph_uppsala, 0));
+console.log(JSON.stringify(Find_Parking_lots(graph_uppsala, 0)));
