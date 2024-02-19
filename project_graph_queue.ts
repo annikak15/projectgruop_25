@@ -172,7 +172,7 @@ export function enqueue<T>(prio: number, e: T, q: Prio_Queue<T>) {
         elems[tail_index] = [prio, e];
         // swap elements until we find the right spot
         for (let i = tail_index; i > head_index; i = i - 1) {
-            if (elems[i - 1][0] <= elems[i][0]) {
+            if (elems[i][0] < elems[i - 1][0]) { // elems[i - 1][0] <= elems[i][0]
                 break;
             } else { //swap
                 swap(elems, i, i - 1);
