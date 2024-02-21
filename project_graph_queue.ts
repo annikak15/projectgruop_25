@@ -1,22 +1,19 @@
 
 import {
-    type List, list, for_each, filter, pair, head, tail, list_ref, reverse, append, map, length, is_null
+    type List, list, for_each, filter, pair, tail, list_ref, reverse, append, map, length
 } from '../../PKD/lib/list';
-import {
-    type Queue, is_empty, head as qhead, 
-} from '../../PKD/lib/queue_array';
+
 import {
     type ListGraph, build_array
 } from '../../PKD/lib/graphs';
 
-import { Prio_Queue, empty, enqueue, dequeue
+import { Prio_Queue, empty, dequeue, head, is_empty, display_queue, swap
 
 } from '../../PKD/lib/prio_queue'
 
 import * as PromptSync from "prompt-sync";
 
 const prompt: PromptSync.Prompt = PromptSync({ sigint: true });
-
 
 /**
  * Represents an edge in a weighted graph with a target node and an edge weight.
@@ -141,12 +138,10 @@ type findparking = {
  * node in the graph, representing its location, and is identified by a name.
  */
 const All_Parking_lots: Parking_lot = {
-    list_of_all_parking: [{node_number:2, name: "Aimo parkering - Husargatan (Hemköp)"}, 
-                          {node_number: 3, name: "Studenternas IP parkering"}, 
-                          {node_number: 4, name: "Aimo park Grimhild"},
-                          { node_number: 5, name: "Aimo park - Ångströmslaboratoriet" },
-                          { node_number: 6, name: "Centralstation gatuparekring" }],
-    number_of_parking: 5
+    list_of_all_parking: [{node_number:2, name: "Hemköp"}, 
+                          {node_number: 3, name: "Studenternas"}, 
+                          {node_number: 4, name: "Grimhild"}],
+    number_of_parking: 3
 }; 
 
 /**
@@ -160,6 +155,35 @@ const All_places: Locations = {
 }; 
 
 /**
+ * Adds an element to a priority queue. - edited
+ * @template T type of all queue elements
+ * @param prio priority of the new element (smaller means higher priority)
+ * @param e element to add
+ * @param q queue to add element to
+ * @modifies q such that e is added with priority prio
+ */
+export function enqueue<T>(prio: number, e: T, q: Prio_Queue<T>) {
+    const tail_index = q[1];
+    q[2][tail_index] = [prio, e];
+    if (!is_empty(q)) {
+        // we have at least one element
+        const head_index = q[0];
+        const elems = q[2];
+        elems[tail_index] = [prio, e];
+        // swap elements until we find the right spot
+        for (let i = tail_index; i > head_index; i = i - 1) {
+            if (elems[i][0] < elems[i - 1][0]) { // elems[i - 1][0] <= elems[i][0]
+                break;
+            } else { //swap
+                swap(elems, i, i - 1);
+            }
+        }
+    } else {}
+    q[1] = tail_index + 1;  // update tail index
+}
+
+
+/**
  * Finds the shortest paths to all nodes from a start node
  * @param Graph a weighted undirected graph
  * @param startNode number to start from
@@ -167,54 +191,44 @@ const All_places: Locations = {
  * @returns a record with parent to node and distance from start node
  * 
  */
-
-function Dijkstra_alg(Graph: WeightedAdjacencyList, startNode: number): Parents_and_distance | null {
-
-    if (startNode < 0 || startNode >= Graph.size) {
-        console.error("Error: Start node does not exist in the graph.");
-        return null;
-    }
+function Dijkstras_alg(Graph: WeightedAdjacencyList, startNode: number): Parents_and_distance {
     const size: number = Graph.size
     const parents: Array<number | null> = build_array(size, () => null); 
     const distance: Array<number> = build_array(size, () => Infinity); 
     const visited: Array<boolean> = build_array(size, ()=> false); 
+    let queue: Prio_Queue<number> = empty<number>();
 
     distance[startNode] = 0; 
+    enqueue(0, startNode, queue); 
 
-    for (let i = 0; i < size; i = i + 1) { // Find the closest node
-        let closestNode: number | undefined = undefined ;
-        let closestDistance = Infinity;
+    while (!is_empty(queue) ) {
+        const currentnode: number = head(queue); 
+        dequeue(queue)!;
+        visited[currentnode] = true; 
 
-        for (let node = 0; node < size; node = node + 1) {
-            if(!visited[node] && distance[node] < closestDistance) { 
-                closestNode = node;
-                closestDistance = distance[node];
-            }
-        }
+        const adjlist = Graph.adj[currentnode];
 
-        if (closestNode === undefined) { // If no node is found break out of the loop
-            break;
-        } 
-       
-        visited[closestNode] = true; // closest node is visited
+        if (adjlist !== undefined) {
+        const adjlist_len = length(adjlist);
 
-        const adjlist = Graph.adj[closestNode];
-        const length_adj = length(adjlist); //adjlist ? adjlist.length : 0; - .length does not return the right length, why?
+        for (let i = 0; i < adjlist_len; i = i + 1) {
+            const edge = list_ref(adjlist, i);
+            const target = edge?.target!;
+            const weight = edge?.weight!;
 
-        if (length_adj) {
-            for (let j = 0; j < length_adj; j = j + 1) {
-                const edge = list_ref(adjlist, j)!;
-                const target = edge.target;
-                const weight = edge.weight;
-                if (!visited[target] && distance[closestNode] + weight < distance[target]) {
-                    distance[target] = distance[closestNode] + weight;
-                    parents[target] = closestNode;
-                }
+            if (!visited[target] && distance[currentnode] + weight < distance[target]){
+
+                distance[target] = distance[currentnode] + weight;
+                parents[target] = currentnode;
+                enqueue(distance[target], target, queue); 
+
             }
 
         }
 
     }
+    
+}
 
     const parents_And_distances:Parents_and_distance = {
         parents: parents,
@@ -222,8 +236,10 @@ function Dijkstra_alg(Graph: WeightedAdjacencyList, startNode: number): Parents_
     }; 
 
     return parents_And_distances;
-    
+
+
 }
+
 
 /**
  * Finds all the parking lots 
@@ -232,31 +248,26 @@ function Dijkstra_alg(Graph: WeightedAdjacencyList, startNode: number): Parents_
  * @precondition Graph can't have negative weight values
  * @returns an array with the names of the parking lots in order from closest to furthest from startnode
  */
-
-function Find_Parking_lots(Graph: WeightedAdjacencyList, startnode: number): Array<string> | void {
-    const result = Dijkstra_alg(Graph, startnode);
-
-    if (is_null(result)) {
-        return;
-
-    }
-
+function Find_Parking_lots(Graph: WeightedAdjacencyList, startnode: number): Array<string>{
+    const result = Dijkstras_alg(Graph, startnode);
     const distance = result.distances;
     const parking_lots = All_Parking_lots.list_of_all_parking;
     const number_of_parking_lots = All_Parking_lots.number_of_parking;
-    let parking_id: Array<parking_info> = [];
+    let parking_information: Array<parking_info> = [];
     let parking_all_info: Array<findparking> = [];
 
     for ( let i = 0; i < number_of_parking_lots; i = i + 1) { 
         const parking = parking_lots[i];
-        parking_id.push(parking); 
+        parking_information.push(parking); 
     }
 
-    for (let j = 0; j < parking_id.length; j = j + 1) {
-        const parking_inf = parking_id[j];
-        const node = parking_inf.node_number;
+    for (let j = 0; j < parking_information.length; j = j + 1) {
+        const current_parking_info = parking_information[j];
+        const node = current_parking_info.node_number;
         const distance_from_start = distance[node];
-        const Parking_node_name_distance: findparking = { node: node, name: parking_inf.name, distance: distance_from_start};
+        const Parking_node_name_distance: findparking = { node: node, 
+                                                          name: current_parking_info.name, 
+                                                          distance: distance_from_start};
         parking_all_info.push(Parking_node_name_distance);
     }
 
@@ -264,79 +275,33 @@ function Find_Parking_lots(Graph: WeightedAdjacencyList, startnode: number): Arr
 
     const Parking_lot_names = sorted_parking_lots.map(lot => lot.name);
 
-
     return Parking_lot_names;
 }
+
+
 const graph_uppsala: WeightedAdjacencyList = {
    
     adj: [
-
     // Node 0 is connected to Node 1 with a weight of 10, and Node 2 with a weight of 3
-     list({ target: 1, weight: 15 }, { target: 2, weight: 3 }, {target: 3, weight: 5}, {target: 5, weight: 1} ),
+     list({ target: 1, weight: 15 }, { target: 2, weight: 3 }, {target: 3, weight: 5}),
     
     // Node 1 is connected back to Node 0 with a weight of 10, and to Node 3 with a weight of 5
-    list({ target: 0, weight: 15}, { target: 3, weight: 8 }, {target: 4, weight: 3}, {target: 6, weight: 2}),
+    list({ target: 0, weight: 15}, { target: 3, weight: 8 }, {target: 4, weight: 3}),
     
     // Node 2 is connected back to Node 0 with a weight of 3, and to Node 3 with a weight of 8
     list({ target: 0, weight: 3 }, {target: 3, weight: 4}, ),
     
     // Node 3 is connected back to Node 1 with a weight of 5, and to Node 2 with a weight of 8
-    list({ target: 0, weight: 5 }, { target: 1, weight: 8 }, {target: 4, weight: 6},  {target: 2, weight: 4} ),
+    list({ target: 0, weight: 5 }, { target: 1, weight: 8 }, {target: 2, weight: 4}, {target: 4, weight: 6}),
    
+    //node 4 is connected to node 1 with a weight of 3 and to node 3 with a weight of 6
     list({ target: 1, weight: 3 }, {target: 3, weight: 6}),
-
-    list({ target: 0, weight: 1 }),
-
-    list ({target: 1, weight: 2}),
 
   ],
 
-  size: 7
+  size: 5
 
 }; 
-    
-    
-console.log(Dijkstra_alg(graph_uppsala, 0));
+       
+console.log(Dijkstras_alg(graph_uppsala, 0));
 console.log(JSON.stringify(Find_Parking_lots(graph_uppsala, 0)));
-
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-
-                        
