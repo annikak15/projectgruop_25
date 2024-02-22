@@ -1,17 +1,55 @@
 import { type ProbingFunction, type HashFunction, probe_linear
 } from '../lib/hashtables'
-import { Prio_Queue, empty, is_empty, enqueue, dequeue, qhead } from './lib/prio_queue';
+import { Prio_Queue, empty, is_empty, dequeue, qhead } from './lib/prio_queue';
+import { start_timer } from './timer';
 
-export type Person = number; //TEMPORÄRT!!!
 
+/**
+ * A person is a number that represents a person's ID 
+ * 
+ */
+export type Person = number; 
+
+/**
+ * A spot represents a parking spot at a parking lot. 
+ * @invariant Spot is non-negative number 
+ */
 type Spot = number;
 
+/**
+ * A reservation is a record.
+ * It repressents a reservation of a parking spot at a specific time 
+ * @template person a person represents a person's information 
+ * @template dateStart represents the startign date of the reservation
+ * @template dateEnd represents the end date of the reservation 
+ */
 type Reservation = {person: Person, 
     dateStart: Date,
     dateEnd: Date};
 
+/**
+ * Represents the reservations placed on a specific parking spot. 
+ * The reservations are placed in a priority queue, where the 
+ * booking start date made into a number represents the priority of the booking.
+ * Bookings with a lower number, a sooner date, gets higher priority. 
+ */
 export type Reservations = Prio_Queue<Reservation>;
 
+/**
+ * A hash table that resolves collisions by probing
+ * @param keys the key array. null means that a key has been deleted.
+ *      Represents the spots in the parking lot
+ * @param people array of people that is currantly parked in a parking spot 
+ * @param reserved array of prio queues that stores reservations for each parking spot 
+ * @param probe the probing function
+ * @param size the number of elements currently in the table
+ * @invariant If keys[i] is neither null nor undefined, 
+ *     then people[i] contains a person.
+ * @invariant size is equal to the number of elements in keys 
+ *     that are neither null nor undefined.
+ * @invariant When the table is empty the reserved queue an array with empty 
+ *      queues that is the size of the table. 
+ */
 export type ParkingTable = {
     readonly keys:  Array<Spot | null | undefined >,
     readonly people:  Array<Person>,
@@ -42,79 +80,6 @@ export function make_parking_table(length: number): ParkingTable{
 }
 
 /**
- * 
- * @param parking 
- * @returns 
- */
-export function find_empty_parking(parking: ParkingTable): Array<number> { //UTÖKA
-    //Ska kolla upp alla parkeringsplatser som är tomma
-    //Ska returnera alla platser som användaren kan välja på i form av array?
-    //Ska kanske också kolla när parkeringsplatsen är tom? 
-    //Ev ta en till param, när den ska bokas 
-    const emptySpots: Array<number> = []; 
-    for(let i = 0; i < parking.size; i++){
-        if(is_empty_spot(parking, i)){
-            emptySpots.push(i); 
-        } else {}
-    }
-    return emptySpots; 
-}
-
-
-//Ska kanske byta ut mot is_reserved 
-function is_empty_spot(parking: ParkingTable, spot: number): boolean {
-    return parking.people[spot] === (undefined || null) ? true: false;  
-}
-
-// helper function implementing probing from a given probe index i
-function probe_from<K, V, R>({keys, probe}: ParkingTable, 
-    key: Spot, i: number): number | undefined {
-    function step(i: number): number | undefined {
-        const index = probe(keys.length, key, i);
-        return i === keys.length || keys[index] === undefined
-            ? undefined
-            : keys[index] === key
-            ? index
-            : step(i + 1);
-    }
-    return step(i);
-}
-
-//OBS; KANSKE LÄGG TILL SÅ ATT FÖRSTA PERSONEN I KÖN KAN PARKERA? 
-export function park_at(parking: ParkingTable, spot: number, person: Person): boolean {
-    function insertAt(index: number): true {
-        parking.keys[index] = spot;
-        parking.people[index] = person;
-        parking.size = parking.size + 1;
-        return true;
-    }
-    function insertFrom(i: number): boolean {
-        const index = parking.probe(parking.keys.length, spot, i);
-        if (parking.keys[index] === spot || parking.keys[index] === undefined) {
-            return insertAt(index);
-        } else if (parking.keys[index] === null) {
-            const location = probe_from(parking, spot, i);
-            return insertAt(location === undefined ? index : location);
-        } else {
-            return insertFrom(i + 1);
-        }
-    }
-    return parking.keys.length === parking.size ? false : insertFrom(0);
-}
-
-
-function leave_spot(parking: ParkingTable, spot: number): boolean {
-    const index = probe_from(parking, spot, 0);
-    if (index === undefined) {
-        return false;
-     } else { 
-        parking.keys[index] = null;
-        parking.size = parking.size - 1;
-        return true;
-    }
-}
-
-/**
  * Makes a reservation for a parking spot in a parking lot 
  * @param dateStart The start date of the booking 
  * @param dateEnd The end date of the booking 
@@ -139,7 +104,7 @@ export function make_booking (dateStart: Date, dateEnd: Date, spot: Spot, parkin
  * @param date a date 
  * @returns returns a 12 digit number 
  */
-function make_date_number(date: Date): number{
+export function make_date_number(date: Date): number{
     return date.getFullYear() * 100000000
             + date.getMonth() * 1000000
             + date.getDay() * 10000
@@ -209,4 +174,155 @@ export function find_unbooked(dateStart: Date, dateEnd: Date, parking: ParkingTa
         }else {}
     }
     return notBooked; 
+}
+
+//ANVÄND VID BÖTER 
+function is_empty_spot(parking: ParkingTable, spot: number): boolean {
+    return parking.people[spot] === (undefined || null) ? true: false;  
+}
+
+
+//Lägg till ytterligare en funktion som anropas efter att timern gått en viss tid, en somvarnar om 15 minuter kvar, en som ger böter 
+
+function warn_user():void {}
+
+function give_boot():void {}
+
+//Modified prio queue
+/**
+ * Adds an element to a priority queue.
+ * @template T type of all queue elements
+ * @param prio priority of the new element (smaller means higher priority)
+ * @param e element to add
+ * @param q queue to add element to
+ * @modifies q such that e is added with priority prio
+ */
+export function enqueue<T>(prio: number, e: T, q: Prio_Queue<T>) {
+    const tail_index = q[1];
+    q[2][tail_index] = [prio, e];
+    if (!is_empty(q)) {
+        // we have at least one element
+        const head_index = q[0];
+        const elems = q[2];
+        elems[tail_index] = [prio, e];
+        // swap elements until we find the right spot
+        for (let i = tail_index; i > head_index; i = i - 1) {
+            if (elems[i - 1][0] <= elems[i][0]) {
+                break;
+            } else { //swap
+                swap(elems, i, i - 1);
+            }
+        }
+    } else {}
+    q[1] = tail_index + 1;  // update tail index
+}
+
+function swap<T>(A: Array<T>, i: number, j: number) {
+    const tmp = A[i];
+    A[i] = A[j];
+    A[j] = tmp;
+}
+
+
+
+
+
+
+//Ska kanske ta bort 
+/**
+ * 
+ * @param parking 
+ * @returns 
+ */
+export function find_empty_parking(parking: ParkingTable): Array<number> { //UTÖKA
+    //Ska kolla upp alla parkeringsplatser som är tomma
+    //Ska returnera alla platser som användaren kan välja på i form av array?
+    //Ska kanske också kolla när parkeringsplatsen är tom? 
+    //Ev ta en till param, när den ska bokas 
+    const emptySpots: Array<number> = []; 
+    for(let i = 0; i < parking.size; i++){
+        if(is_empty_spot(parking, i)){
+            emptySpots.push(i); 
+        } else {}
+    }
+    return emptySpots; 
+}
+
+
+// helper function implementing probing from a given probe index i
+function probe_from<K, V, R>({keys, probe}: ParkingTable, //SPARA FOR NOW 
+    key: Spot, i: number): number | undefined {
+    function step(i: number): number | undefined {
+        const index = probe(keys.length, key, i);
+        return i === keys.length || keys[index] === undefined
+            ? undefined
+            : keys[index] === key
+            ? index
+            : step(i + 1);
+    }
+    return step(i);
+}
+
+
+function find_person(reservations: Reservations, person: Person): Reservation | undefined {
+    const reservs = reservations; 
+    for(let i = 0; i < reservs.length; i++) {
+        const reserv = qhead(reservs); 
+        if(reserv.person === person) {
+            return reserv; 
+        } else {
+            dequeue(reservs);
+        }
+    }
+    return undefined; 
+}
+
+
+//OBS; KANSKE LÄGG TILL SÅ ATT FÖRSTA PERSONEN I KÖN KAN PARKERA? 
+//Bra att ha kvar, finns funktion som gör så att man inte dubbel parkerar 
+//Utöka så att den startar timer när man parkerar 
+export function park_at(parking: ParkingTable, spot: number, person: Person): boolean {
+    function park_timer(startDate: Date, endDate: Date){
+        const secondsStart = startDate.getTime(); 
+        const secondsEnd = endDate.getTime();
+        start_timer(secondsEnd - secondsStart); 
+    }
+    function insertAt(index: number): true {
+        parking.keys[index] = spot;
+        parking.people[index] = person;
+        parking.size = parking.size + 1;
+        return true;
+    }
+    function insertFrom(i: number): boolean {
+        const index = parking.probe(parking.keys.length, spot, i);
+        if (parking.keys[index] === spot || parking.keys[index] === undefined) {
+            return insertAt(index);
+        } else if (parking.keys[index] === null) {
+            const location = probe_from(parking, spot, i);
+            return insertAt(location === undefined ? index : location);
+        } else {
+            return insertFrom(i + 1);
+        }
+    }
+    const reservations = parking.reserved[spot]; 
+    const reservation = find_person(reservations, person); 
+    if(reservation === undefined) {
+        return false; 
+    } else {
+        park_timer(reservation.dateStart, reservation.dateEnd); 
+    }
+    return parking.keys.length === parking.size ? false : insertFrom(0);
+}
+
+//Ändra så att timer avsluats, gör också så att man dequeas, om det är någon annan framför dequas den också 
+function leave_spot(parking: ParkingTable, spot: number): boolean {
+    const index = probe_from(parking, spot, 0);
+    if (index === undefined) {
+        return false;
+     } else { 
+        parking.keys[index] = null;
+        parking.size = parking.size - 1;
+        dequeue(parking.reserved[spot])
+        return true;
+    }
 }
