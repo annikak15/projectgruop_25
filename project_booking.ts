@@ -1,12 +1,12 @@
 import { type ProbingFunction, type HashFunction, probe_linear
 } from '../lib/hashtables'
-import { Prio_Queue, empty, is_empty, dequeue, qhead } from './lib/prio_queue';
+import { Prio_Queue, empty, is_empty, dequeue, qhead, display_queue } from './lib/prio_queue';
 import { start_timer } from './timer';
 
 
 /**
  * A person is a number that represents a person's ID 
- * //invalid unique 
+ * //invalid not unique nr, empty?? 
  */
 export type Person = number; 
 
@@ -15,6 +15,7 @@ export type Person = number;
  * @invariant Spot is non-negative number 
  * //Invalid 
  * Empty? 
+ * Must be 0<=spot<parking.size 
  */
 export type Spot = number;
 
@@ -181,7 +182,11 @@ export function find_unbooked(dateStart: Date, dateEnd: Date, parking: ParkingTa
 
 //ANVÄND VID BÖTER??
 export function is_empty_spot(parking: ParkingTable, spot: number): boolean {
-    return parking.keys[spot] === (undefined || null) ? true: false;  
+    return parking.keys[spot] === undefined 
+            ? true
+            : parking.keys[spot] === null
+            ? true
+            : false;  
 }
 
 
@@ -312,7 +317,7 @@ export function park_at(parking: ParkingTable, spot: number, person: Person): bo
         }
     }
 
-    if(parking.keys.length === parking.size) {
+    if(parking.keys.length === parking.size || !is_empty_spot(parking, spot)) {
         return false; 
     } else {
         const reservations = parking.reserved[spot]; 
@@ -352,10 +357,10 @@ export function leave_spot(parking: ParkingTable, spot: number, person: Person):
             const reserv = qhead(reservs); 
             dequeue(reservs);
             if (reserv.person === person) { 
+                parking.reserved[spot] = reservs;
                 break; 
-            }
+            } 
         }
-        parking.reserved[spot] = reservs; 
         return true;
     }
 }
