@@ -2,7 +2,6 @@ import { type ProbingFunction, type HashFunction, probe_linear
 } from '../lib/hashtables'
 import { Prio_Queue, empty, is_empty, dequeue, qhead } from './lib/prio_queue';
 import { start_timer } from './timer';
-import { start_timer_mod } from './timer_mod';
 
 
 /**
@@ -182,7 +181,7 @@ export function find_unbooked(dateStart: Date, dateEnd: Date, parking: ParkingTa
 
 //ANVÄND VID BÖTER??
 export function is_empty_spot(parking: ParkingTable, spot: number): boolean {
-    return parking.parked[spot] === (undefined || null) ? true: false;  
+    return parking.keys[spot] === (undefined || null) ? true: false;  
 }
 
 
@@ -287,9 +286,8 @@ function is_within_date(dateS: Date, dateE: Date): boolean {
 export function park_at(parking: ParkingTable, spot: number, person: Person): boolean {
     //Starts the timer 
     function park_timer(startDate: Date, endDate: Date){
-        const secondsStart = startDate.getTime(); 
-        const secondsEnd = endDate.getTime();
-        console.log(secondsEnd - secondsStart); 
+        const secondsStart = startDate.getTime() / 1000; 
+        const secondsEnd = endDate.getTime() / 1000; 
         start_timer(secondsEnd - secondsStart, spot, parking); 
     }
 
@@ -323,7 +321,9 @@ export function park_at(parking: ParkingTable, spot: number, person: Person): bo
         if (reservation === undefined) {
             return false; 
         } else if (is_within_date(reservation.dateStart, reservation.dateEnd)){
-            return insertFrom(0);
+            insertFrom(0);
+            park_timer(reservation.dateStart, reservation.dateEnd); 
+            return true; 
         } else {
             return false; 
         }
@@ -345,8 +345,7 @@ export function leave_spot(parking: ParkingTable, spot: number, person: Person):
     if (index === undefined) {
         return false;
      } else { 
-        //AVSLUTA TIMERN? 
-        parking.keys[index] = null;
+        parking.keys[index] = null; 
         parking.size = parking.size - 1;
         const reservs = parking.reserved[spot];
         for(let i = 0; i < reservs.length; i++) {
