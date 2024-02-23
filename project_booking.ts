@@ -2,11 +2,12 @@ import { type ProbingFunction, type HashFunction, probe_linear
 } from '../lib/hashtables'
 import { Prio_Queue, empty, is_empty, dequeue, qhead } from './lib/prio_queue';
 import { start_timer } from './timer';
+import { start_timer_mod } from './timer_mod';
 
 
 /**
  * A person is a number that represents a person's ID 
- * 
+ * //invalid unique 
  */
 export type Person = number; 
 
@@ -16,7 +17,7 @@ export type Person = number;
  * //Invalid 
  * Empty? 
  */
-type Spot = number;
+export type Spot = number;
 
 /**
  * A reservation is a record.
@@ -180,7 +181,7 @@ export function find_unbooked(dateStart: Date, dateEnd: Date, parking: ParkingTa
 }
 
 //ANVÄND VID BÖTER??
-function is_empty_spot(parking: ParkingTable, spot: number): boolean {
+export function is_empty_spot(parking: ParkingTable, spot: number): boolean {
     return parking.parked[spot] === (undefined || null) ? true: false;  
 }
 
@@ -289,7 +290,7 @@ export function park_at(parking: ParkingTable, spot: number, person: Person): bo
         const secondsStart = startDate.getTime(); 
         const secondsEnd = endDate.getTime();
         console.log(secondsEnd - secondsStart); 
-        start_timer(secondsEnd - secondsStart); 
+        start_timer(secondsEnd - secondsStart, spot, parking); 
     }
 
     //Helper function to insertFrom
@@ -332,18 +333,19 @@ export function park_at(parking: ParkingTable, spot: number, person: Person): bo
 /**
  * The user leaves the spot they were parked at, removes the user's reservation
  * from the reservations queue (stored in the parking table). It also removes 
- * any bookings prior to
- * @param parking 
- * @param spot 
- * @param person 
- * @returns 
+ * any bookings prior to the one that is being removed from the queue.
+ * @param parking the parking lot 
+ * @param spot the parking spot the user is leaving 
+ * @param person the user's ID 
+ * @returns returns true if the person is found at the parking lot at the given 
+ *      spot, returns false otherwise. 
  */
 export function leave_spot(parking: ParkingTable, spot: number, person: Person): boolean {
     const index = probe_from(parking, spot, 0);
     if (index === undefined) {
         return false;
      } else { 
-        //AVSLUTA TIMERN 
+        //AVSLUTA TIMERN? 
         parking.keys[index] = null;
         parking.size = parking.size - 1;
         const reservs = parking.reserved[spot];
@@ -358,3 +360,4 @@ export function leave_spot(parking: ParkingTable, spot: number, person: Person):
         return true;
     }
 }
+
