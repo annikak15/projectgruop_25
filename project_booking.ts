@@ -1,6 +1,6 @@
 import { type ProbingFunction, type HashFunction, probe_linear
-} from '../lib/hashtables'
-import { Prio_Queue, empty, is_empty, dequeue, qhead, display_queue } from './lib/prio_queue';
+} from '../../lib/hashtables'
+import { Prio_Queue, empty, is_empty, dequeue, qhead, display_queue } from '../../lib/prio_queue';
 import { start_timer } from './timer';
 
 
@@ -28,7 +28,7 @@ export type Spot = number;
  * //Invalid 
  * dateStart must be at an earlier date than dateEnd 
  */
-type Reservation = {person: Person, 
+export type Reservation = {person: Person, 
     dateStart: Date,
     dateEnd: Date};
 
