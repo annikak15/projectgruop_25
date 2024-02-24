@@ -104,6 +104,7 @@ export function make_booking (dateStart: Date, dateEnd: Date, spot: Spot, parkin
         dateEnd: dateEnd}; 
     const dateNr = make_date_number(dateStart); 
     enqueue(dateNr, reservation, reservations); 
+    update_park("saved_parking_lots.json", parking); 
 }
 
 /**
