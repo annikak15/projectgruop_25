@@ -113,11 +113,12 @@ export function make_booking (dateStart: Date, dateEnd: Date, spot: Spot, parkin
  * @returns returns a 12 digit number 
  */
 export function make_date_number(date: Date): number{
-    return date.getFullYear() * 100000000
-            + date.getMonth() * 1000000
-            + date.getDate() * 10000
-            + date.getHours() * 100 
-            + date.getMinutes(); 
+    const newDate = new Date(date); 
+    return newDate.getFullYear() * 100000000
+            + newDate.getMonth() * 1000000
+            + newDate.getDate() * 10000
+            + newDate.getHours() * 100 
+            + newDate.getMinutes(); 
 }
 
 /**
@@ -125,7 +126,8 @@ export function make_date_number(date: Date): number{
  * @param date a date
  * @returns returns the date with 15 minutes added to it 
  */
-function add_15_minutes(date: Date): Date{
+function add_15_minutes(d: Date): Date{
+    const date = new Date(d); //Transforms date from saved_parking_lots.json to actual date
     const min = date.getMinutes(); 
     let newDate = date; 
     newDate.setMinutes(min + 15); 
