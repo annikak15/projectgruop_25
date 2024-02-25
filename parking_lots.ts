@@ -1,8 +1,25 @@
-import { ParkingTable, make_parking_table } from "./project_booking";
+import { ParkingTable } from "./project_booking";
 
 import { HashFunction, probe_linear } from "../lib/hashtables";
 
+import { empty } from "./lib/prio_queue";
+
 import * as fs from 'fs';
+
+function make_parking_table(length: number, name: string): ParkingTable{
+    const hash_func : HashFunction<number> = (key : number) => key;  
+    const table: ParkingTable = { 
+        name: name,
+        keys: new Array(length), 
+        parked: new Array(length), 
+        reserved: new Array(length),
+        probe: probe_linear(hash_func), 
+        size: 0 };
+    for(let i = 0; i < table.reserved.length; i++) {
+        table.reserved[i] = empty(); 
+    }
+    return table; 
+}
 
 /**
  * set_up is used to reset the system compleatly, emptying all parking lots.
