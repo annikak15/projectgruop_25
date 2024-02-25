@@ -372,3 +372,4 @@ export function leave_spot(parking: ParkingTable, spot: number,
     }
 }
 
+
