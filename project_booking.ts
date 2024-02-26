@@ -293,8 +293,9 @@ export function is_within_date(dateS: Date, dateE: Date): boolean {
 export function park_at(parking: ParkingTable, spot: number, 
                         person: Person): boolean {
     //Starts the timer 
-    function park_timer(startD: Date, endDate: Date){
+    function park_timer(startD: Date, endD: Date){
         const startDate = new Date(startD);
+        const endDate = new Date(endD);
         const secondsStart = startDate.getTime() / 1000; 
         const secondsEnd = endDate.getTime() / 1000; 
         start_timer(secondsEnd - secondsStart, spot, parking); 
