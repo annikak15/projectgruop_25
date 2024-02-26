@@ -15,9 +15,10 @@ const personID = 20040520 //TEMPORÄRT!!!
  * valid date. When the user has given a correct date the function returns 
  * a reservation (a record with the start date, end date and the user's ID)
  * @param person The user's id
- * @returns 
+ * @returns Returns a reservation, a record with the start and end date as well
+ *      as the user's ID
  */
-function ask_date(person: Person): Reservation{
+export function ask_date(person: number): Reservation{
     function is_invalid_date(dateS: Date, dateE: Date):boolean {
         if(dateS.toString() === "Invalid Date" || 
            dateE.toString() === "Invalid Date") {
@@ -26,16 +27,29 @@ function ask_date(person: Person): Reservation{
             return true; 
         }
     }
-    let dateStart: Date = new Date()
-    let dateEnd: Date = new Date()
+    let userInput1: string = ""
+    let userInput2: string = ""
+    let dateStart: Date = new Date();
+    let dateEnd: Date = new Date();
     let validDate = false;
     while(!validDate) {
+        console.log("Press q to quit");
         console.log("Please write date and time like this: YYYY-MM-DD HH:MM");
         console.log("When do you want your reservation to start?");
-        dateStart = new Date(prompt(""));
-        console.log("When do you want your reservation to end?");
-        dateEnd = new Date(prompt(""));
-        validDate = is_invalid_date(dateStart, dateEnd);
+        userInput1 = prompt("");
+        if (userInput1 === "q") {
+            break;
+        } else {
+            dateStart = new Date(userInput1);
+            console.log("When do you want your reservation to end?");
+            userInput2 = prompt("");
+            if (userInput2 === "q") {
+                break;
+            } else {
+                dateEnd = new Date(userInput2);
+                validDate = is_invalid_date(dateStart, dateEnd);
+            }
+        }
     }
     return {person: person,
             dateStart: dateStart,
@@ -43,48 +57,56 @@ function ask_date(person: Person): Reservation{
 }
 
 /**
- * 
- * @param dateS 
- * @param dateE 
- * @param person 
+ * Asks the user to put in a parking lot, if the lot is full, or if the user 
+ * put in a parking lot that is not in the system, then it asks the user to 
+ * put in another one. 
+ * @param dateS The starting date of a reservation
+ * @param dateE the end date of a reservation
+ * @param person the user's ID number
+ * @modifies Modifies the 
  */
-function ask_park(dateS, dateE, person): void {
+export function ask_park(dateS: Date, dateE: Date, person: number): void {
     let spot = NaN; //Temporärt 
     const file = "saved_parking_lots.json";
-    let parkString: string = "";
+    let userInput: string = "";
     let validPark = false;
 
     while(!validPark) {
+        console.log("press q to quit");
         console.log("Where do you want to park?");
-        parkString = prompt("");
-        const park = get_park_from_parkingLots(file, parkString);
-        //Kollar om man skrivit in parkering som existerar
-        if (park === undefined) {
-            continue;
-        //Kollar så att man inte använder test-parkeringar 
-        } else if(park.name === "test" || park.name === "empty") {
-            continue;
-        //Valt en parkering som finns 
+        userInput = prompt("").toLocaleLowerCase();
+        if (userInput === "q") {
+            break;
         } else {
-            const unbooked = find_unbooked(dateS, dateE, park);
-            //Kollar om det finns plats 
-            if (unbooked.length === 0) {
-                //man kan fastna här i en oändlig loop nu tyvärr :/
-                console.log("That lot is full, pick another parking lot")   
-            //finns plats på parkering
+            //LETAA REDA PÅ PARKERINGAR I NÄRHETEN? 
+            const park = get_park_from_parkingLots(file, userInput);
+            //Kollar om man skrivit in parkering som existerar
+            if (park === undefined) {
+                continue;
+            //Kollar så att man inte använder test-parkeringar 
+            } else if(park.name === "test" || park.name === "empty") {
+                continue;
+            //Valt en parkering som finns 
             } else {
-                let validAnswer = false; 
-                //Kollar så att man väljer en ledig plats på parkeringen
-                while(!validAnswer) {
-                    console.log("Choose one of these spots:");
-                    console.log(unbooked);
-                    spot = Number(prompt("")); 
-                    if(spot in unbooked) {
-                        //Här avslutas while-loopen
-                        validAnswer = true; 
-                        validPark = true; 
-                        make_booking(dateS, dateE, spot, park, person);
-                    } else {}
+                const unbooked = find_unbooked(dateS, dateE, park);
+                //Kollar om det finns plats 
+                if (unbooked.length === 0) {
+                    console.log("That lot is full, pick another parking lot")   
+                //finns plats på parkering
+                } else {
+                    let validAnswer = false; 
+                    //Kollar så att man väljer en ledig plats på parkeringen
+                    while(!validAnswer) {
+                        console.log("Choose one of these spots:");
+                        console.log(unbooked);
+                        spot = Number(prompt("")); 
+                        if(spot in unbooked) {
+                            //Här avslutas while-loopen
+                            validAnswer = true; 
+                            validPark = true; 
+                            make_booking(dateS, dateE, spot, park, person);
+                        } else {}
+                    }
                 }
             }
         }
@@ -95,46 +117,68 @@ function ask_park(dateS, dateE, person): void {
  * 
  * @param personID 
  */
-function parking(personID): void {
+export function parking(personID): void {
     let validAnsw = false;
     while(!validAnsw) {
         const file = "saved_parking_lots.json";
-        const park = get_park_from_parkingLots(file, prompt("At what parking lot? "));
-        if (park === undefined) {
-            console.log("not valid parking lot")
-            continue;
-        //Kollar så att man inte använder test-parkeringar 
-        } else if(park.name === "test" || park.name === "empty") {
-            console.log("not valid parking lot")
-            continue;
-        //Valt en parkering som finns 
+        console.log("press q to quit");
+        const userInput = prompt("At what parking lot? ").toLocaleLowerCase(); 
+        if (userInput === "q") {
+            break; 
         } else {
-            const spot = Number(prompt("At what spot? "));
-            validAnsw = (park_at(park, spot, personID)); //Lite förvirrande kanske, men om den är true så har man lyckats parkera
+            const park = get_park_from_parkingLots(file, userInput);
+            if (park === undefined) {
+                console.log("not valid parking lot")
+                continue;
+            //Kollar så att man inte använder test-parkeringar 
+            } else if(park.name === "test" || park.name === "empty") {
+                console.log("not valid parking lot")
+                continue;
+            //Valt en parkering som finns 
+            } else {
+                const spot = Number(prompt("At what spot? "));
+                validAnsw = (park_at(park, spot, personID)); //Lite förvirrande kanske, men om den är true så har man lyckats parkera
+            }
         }
     }
 }
 
 /**
- * 
- * @param personID 
+ * A function that asks the user to put in the current parking lot and parking 
+ * spot they are parked at. If they do so successfully they will end their 
+ * ongoing parking. 
+ * @param personID the user's ID
+ * @modifies the parkingTable of the parking lot if the user successfully leaves 
+ *      the spot. If the user decide to quit no changes will occur 
  */
-function leave(personID): void {
+export function leave(personID): void {
     let validAnsw = false;
     while(!validAnsw) {
         const file = "saved_parking_lots.json";
-        const park = get_park_from_parkingLots(file, prompt("At what parking lot? "));
-        if (park === undefined) {
-            console.log("not valid parking lot")
-            continue;
-        //Kollar så att man inte använder test-parkeringar 
-        } else if(park.name === "test" || park.name === "empty") {
-            console.log("not valid parking lot")
-            continue;
-        //Valt en parkering som finns 
+        console.log("press q to quit");
+        const userInput = prompt("At what parking lot? ").toLocaleLowerCase(); 
+        if(userInput === "q") {
+        
         } else {
-            const spot = Number(prompt("At what spot? "));
-            validAnsw = leave_spot(park, spot, personID); //Lite förvirrande kanske, men om den är true så har man lyckats lämna
+            const park = get_park_from_parkingLots(file, userInput);
+            if (park === undefined) {
+                console.log("not valid parking lot")
+                continue;
+            //Kollar så att man inte använder test-parkeringar 
+            } else if(park.name === "test" || park.name === "empty") {
+                console.log("not valid parking lot")
+                continue;
+            //Valt en parkering som finns 
+            } else {
+                const spot = Number(prompt("At what spot? "));
+                const leftSpot = leave_spot(park, spot, personID); 
+                if (leftSpot) {
+                    validAnsw = true;
+                    console.log("You have ended your parking");
+                } else {
+                    console.log("Invalid spot");
+                }
+            }
         }
     }
 }
@@ -155,30 +199,34 @@ function leave(personID): void {
 //samma som när man väljer att parkera, lättare för oss om användaren skriver in själv 
 //leave(personID);
 
-function park_options(personID: number): void{
-    let validUserAnswer = false;
-    while(validUserAnswer === false) {
+export function park_options(personID: number): void{
+    let userQuit = false;
+    while(userQuit === false) {
         console.log("What do you want to do?");
         console.log("Options:");
         console.log("book a spot: B");
         console.log("park at your booked spot: P");
         console.log("leave your parking spot: L");
+        console.log("Quit: Q");
         const answ = prompt("").toLocaleLowerCase(); 
         if(answ === "b") {
             const reservation = ask_date(personID);
             ask_park(reservation.dateStart, reservation.dateEnd, personID);
             console.log("Your booking is registered");
-            validUserAnswer = true;
         } else if(answ === "p") {
             parking(personID);
             console.log("You have parked at your spot")
-            validUserAnswer = true;
         } else if(answ === "l") {
             leave(personID);
             console.log("You have left your spot")
-            validUserAnswer = true;
+        } else if(answ === "q") {
+            userQuit = true;
+
         } else {
             console.log("Invalid answer, please try again")
         }
     }
 }
+
+park_options(personID);
+
