@@ -80,7 +80,7 @@ function login(hashtable: ud.user_table) {
         if (user !== null) {
             const user_int = +user;
             loggedin_user = user_int;
-            const current_user = user_int;
+            current_user = user_int;
             const lookup = ud.find_user_record(user_int, hashtable);
             
             if (lookup?.id === user_int) {
