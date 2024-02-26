@@ -6,7 +6,7 @@ import * as gq from './project_graph_queue';
 import * as g from './project_graph';
 import * as ps from "prompt-sync";
 
-import { park_options, ask_date, ask_park, parking} from './booking_prompts';
+import { ask_date, ask_park, parking, leave} from './booking_prompts';
 
 const prompt: ps.Prompt = ps({ sigint: true });
 const user_hashtable = ud.create_user_table(10);
@@ -112,14 +112,14 @@ function homepage_options() {
         find_parking();
     } 
     else if (choise === "2"){
-        end_parking();
+        leave(loggedin_user);
     }
     else if (choise === "3"){
         //Kolla historik funktioner
     } 
 
     else if ( choise === '4') {
-        Park_in_spot();
+        parking(loggedin_user);
     }
     
     else if (choise === '5') {
@@ -148,17 +148,15 @@ function find_parking() {
         console.log('Not valid input, try again');
         find_parking();
     }
-
 }
 
 function book_parking() {
     const answer = prompt('Do you want to book parking? (yes/no):')
 
     if(answer === 'yes'){
-        const reservation = ask_date(current_user);
-        ask_park(reservation.dateStart, reservation.dateEnd, current_user);
+        const reservation = ask_date(loggedin_user);
+        ask_park(reservation.dateStart, reservation.dateEnd, loggedin_user);
         console.log("Your booking is registered");
-        
     }
 
     else if (answer === 'no') {
@@ -171,17 +169,5 @@ function book_parking() {
     }
 }
 
-function Park_in_spot (){
-    parking(current_user);
-    console.log("You have parked at your spot")
-
-}
-
-
-
-function end_parking() {
-
-    // Ska avsluta pågående parkering
-}
 
 start();
