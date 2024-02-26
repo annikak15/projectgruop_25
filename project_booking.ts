@@ -29,7 +29,7 @@ export type Spot = number;
  * //Invalid 
  * dateStart must be at an earlier date than dateEnd 
  */
-type Reservation = {person: Person, 
+export type Reservation = {person: Person, 
                     dateStart: Date,
                     dateEnd: Date};
 
@@ -250,7 +250,7 @@ function probe_from<K, V, R>({keys, probe}: ParkingTable,
 export function find_person(reservations: Reservations, 
                      person: Person): Reservation | undefined {
     const reservs = reservations; 
-    for(let i = 0; i < reservs.length; i++) {
+    while (!is_empty(reservs)) {
         const reserv = qhead(reservs); 
         if(reserv.person === person) {
             return reserv; 
@@ -268,7 +268,7 @@ export function find_person(reservations: Reservations,
  * @returns returns true if todays date is within the starting and end date
  *      returns false if not. 
  */
-function is_within_date(dateS: Date, dateE: Date): boolean {
+export function is_within_date(dateS: Date, dateE: Date): boolean {
     const today = make_date_number(new Date());
     if(make_date_number(dateS) <= today && make_date_number(dateE) > today) {
         return true;
@@ -293,7 +293,8 @@ function is_within_date(dateS: Date, dateE: Date): boolean {
 export function park_at(parking: ParkingTable, spot: number, 
                         person: Person): boolean {
     //Starts the timer 
-    function park_timer(startDate: Date, endDate: Date){
+    function park_timer(startD: Date, endDate: Date){
+        const startDate = new Date(startD);
         const secondsStart = startDate.getTime() / 1000; 
         const secondsEnd = endDate.getTime() / 1000; 
         start_timer(secondsEnd - secondsStart, spot, parking); 
@@ -350,7 +351,7 @@ export function park_at(parking: ParkingTable, spot: number,
  * @returns returns true if the person is found at the parking lot at the given 
  *      spot, returns false otherwise. 
  */
-export function leave_spot(parking: ParkingTable, spot: number, 
+export function leave_spot(parking: ParkingTable, spot: Spot, 
                            person: Person): boolean {
     const index = probe_from(parking, spot, 0);
     if (index === undefined) {
