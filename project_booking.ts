@@ -289,14 +289,16 @@ export function is_within_date(dateS: Date, dateE: Date): boolean {
  *      user didn't book that specific spot, if the parking table has no empty 
  *      spots the function returns false, or if the person is trying to park at 
  *      a time that is not within their booked time. 
+ * @modifies the parking table, adds the key (spot), to the array of keys.
+ *      The key index in the array = spot. 
  */
 export function park_at(parking: ParkingTable, spot: number, 
                         person: Person): boolean {
     //Starts the timer 
-    function park_timer(startD: Date, endD: Date){
-        const startDate = new Date(startD);
+    function park_timer(endD: Date){
+        const todayDate = new Date();
         const endDate = new Date(endD);
-        const secondsStart = startDate.getTime() / 1000; 
+        const secondsStart = todayDate.getTime() / 1000; 
         const secondsEnd = endDate.getTime() / 1000; 
         start_timer(secondsEnd - secondsStart, spot, parking); 
     }
@@ -333,7 +335,7 @@ export function park_at(parking: ParkingTable, spot: number,
             return false; 
         } else if (is_within_date(reservation.dateStart, reservation.dateEnd)){
             insertFrom(0);
-            park_timer(reservation.dateStart, reservation.dateEnd); 
+            park_timer(reservation.dateEnd); 
             update_park("saved_parking_lots.json", parking); 
             return true; 
         } else {
@@ -351,11 +353,14 @@ export function park_at(parking: ParkingTable, spot: number,
  * @param person the user's ID 
  * @returns returns true if the person is found at the parking lot at the given 
  *      spot, returns false otherwise. 
+ * @modifies the parking table, removes the person from the reservations queue 
+ *      for this parking spot. The key with the same index as the queue is also 
+ *      removed.
  */
 export function leave_spot(parking: ParkingTable, spot: Spot, 
                            person: Person): boolean {
     const index = probe_from(parking, spot, 0);
-    if (index === undefined) {
+    if (index === undefined || parking.parked[index] !== person) {
         return false;
      } else { 
         parking.keys[index] = null; 
