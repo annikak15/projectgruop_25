@@ -1,20 +1,24 @@
 import { type ProbingFunction, type HashFunction, probe_linear
 } from '../lib/hashtables'
 import { Prio_Queue, empty, is_empty, dequeue, qhead } from './lib/prio_queue';
+import { update_park } from './parking_lots';
 import { start_timer } from './timer';
 
 
 /**
  * A person is a number that represents a person's ID 
- * 
+ * //invalid not unique nr, empty?? 
  */
 export type Person = number; 
 
 /**
  * A spot represents a parking spot at a parking lot. 
  * @invariant Spot is non-negative number 
+ * //Invalid 
+ * Empty? 
+ * Must be 0<=spot<parking.size 
  */
-type Spot = number;
+export type Spot = number;
 
 /**
  * A reservation is a record.
@@ -22,10 +26,12 @@ type Spot = number;
  * @template person a person represents a person's information 
  * @template dateStart represents the startign date of the reservation
  * @template dateEnd represents the end date of the reservation 
+ * //Invalid 
+ * dateStart must be at an earlier date than dateEnd 
  */
-type Reservation = {person: Person, 
-    dateStart: Date,
-    dateEnd: Date};
+export type Reservation = {person: Person, 
+                    dateStart: Date,
+                    dateEnd: Date};
 
 /**
  * Represents the reservations placed on a specific parking spot. 
@@ -40,7 +46,8 @@ export type Reservations = Prio_Queue<Reservation>;
  * @param keys the key array. null means that a key has been deleted.
  *      Represents the spots in the parking lot
  * @param people array of people that is currantly parked in a parking spot 
- * @param reserved array of prio queues that stores reservations for each parking spot 
+ * @param reserved array of prio queues that stores reservations for each 
+ *      parking spot 
  * @param probe the probing function
  * @param size the number of elements currently in the table
  * @invariant If keys[i] is neither null nor undefined, 
@@ -51,33 +58,13 @@ export type Reservations = Prio_Queue<Reservation>;
  *      queues that is the size of the table. 
  */
 export type ParkingTable = {
+    readonly name: string
     readonly keys:  Array<Spot | null | undefined >,
-    readonly people:  Array<Person>,
-    readonly reserved: Array<Reservations>
+    readonly parked:  Array<Person>,
+    reserved: Array<Reservations>
     readonly probe: ProbingFunction<Spot>,
     size: number // number of elements
 };
-
-
-
-/**
- * Makes an ParkingTable with empty parking spots and no reservations 
- * @param length the number of parking spots in the parking lot 
- * @returns Returns an empty ParkingTable 
- */
-export function make_parking_table(length: number): ParkingTable{
-    const hash_func : HashFunction<number> = (key : number) => key;  
-    const table: ParkingTable = { 
-        keys: new Array(length), 
-        people: new Array(length), 
-        reserved: new Array(length),
-        probe: probe_linear(hash_func), 
-        size: 0 };
-    for(let i = 0; i < table.reserved.length; i++) {
-        table.reserved[i] = empty(); 
-    }
-    return table; 
-}
 
 /**
  * Makes a reservation for a parking spot in a parking lot 
@@ -86,17 +73,19 @@ export function make_parking_table(length: number): ParkingTable{
  * @param spot The empty spot that the user chose 
  * @param parking The desired parking lot the user wants to park at 
  * @param person The person that wants to park 
- * @precondition The spot has no reservations that collide with the start or end date 
+ * @precondition The spot has no reservations that collide with the start or 
+ *      end date 
  * @modifies The reservations queue that belongs to the spot in the ParkingTable 
  */
-export function make_booking (dateStart: Date, dateEnd: Date, spot: Spot, parking: ParkingTable, person: Person): void{
+export function make_booking (dateStart: Date, dateEnd: Date, spot: Spot, 
+                              parking: ParkingTable, person: Person): void{
     let reservations = (parking.reserved)[spot]; 
-    //Reservation waiting to be put in to ht 
     const reservation: Reservation = {person: person,
         dateStart: dateStart, 
         dateEnd: dateEnd}; 
     const dateNr = make_date_number(dateStart); 
     enqueue(dateNr, reservation, reservations); 
+    update_park("saved_parking_lots.json", parking); 
 }
 
 /**
@@ -105,19 +94,21 @@ export function make_booking (dateStart: Date, dateEnd: Date, spot: Spot, parkin
  * @returns returns a 12 digit number 
  */
 export function make_date_number(date: Date): number{
-    return date.getFullYear() * 100000000
-            + date.getMonth() * 1000000
-            + date.getDay() * 10000
-            + date.getHours() * 100 
-            + date.getMinutes(); 
+    const newDate = new Date(date); 
+    return newDate.getFullYear() * 100000000
+            + newDate.getMonth() * 1000000
+            + newDate.getDate() * 10000
+            + newDate.getHours() * 100 
+            + newDate.getMinutes(); 
 }
 
 /**
  * Adds an extra 15 minutes to a date 
- * @param date a date
+ * @param date the date you are adding 15 minutes to
  * @returns returns the date with 15 minutes added to it 
  */
-function add_15_minutes(date: Date): Date{
+function add_15_minutes(d: Date): Date{
+    const date = new Date(d); 
     const min = date.getMinutes(); 
     let newDate = date; 
     newDate.setMinutes(min + 15); 
@@ -125,14 +116,17 @@ function add_15_minutes(date: Date): Date{
 }
 
 /**
- * Checks if a parking spot is reserved during the time a person want to book a spot 
+ * Checks if a parking spot is reserved during the time a person want to 
+ *      book a spot.
  * @param dateS The wanted starting date of the booking 
  * @param dateE The end date of the booking 
  * @param spot The parking spot that is being checked if empty 
  * @param reservations The queue of reservations
- * @returns Returns true or false based on the parking spot is booked between the starting date and end date 
+ * @returns Returns true or false based on the parking spot is booked between 
+ *      the starting date and end date.
  */
-function is_booked(dateS: Date, dateE: Date, spot: Spot, reservations: Reservations): boolean{
+export function is_booked(dateS: Date, dateE: Date, 
+                          reservations: Reservations): boolean{
     const dateStart = make_date_number(dateS); 
     const dateEnd = make_date_number(add_15_minutes(dateE)); 
 
@@ -144,7 +138,8 @@ function is_booked(dateS: Date, dateE: Date, spot: Spot, reservations: Reservati
             dequeue(reservations); 
             const reservStart = make_date_number(reservation.dateStart);
             //Adds 15 minutes to end time to ensure no overlapping 
-            const reservEnd = make_date_number(add_15_minutes(reservation.dateEnd));
+            const reservEnd = make_date_number(
+                                    add_15_minutes(reservation.dateEnd));
 
             if(dateEnd < reservStart){
                 return false;
@@ -165,28 +160,32 @@ function is_booked(dateS: Date, dateE: Date, spot: Spot, reservations: Reservati
  * @param parking The parking lot the user wants to park at 
  * @returns returns an array of spots for the user to choose from 
  */
-export function find_unbooked(dateStart: Date, dateEnd: Date, parking: ParkingTable): Array<Spot>{
+export function find_unbooked(dateStart: Date, dateEnd: Date, 
+                              parking: ParkingTable): Array<Spot>{
     let reservQ = parking.reserved; 
     let notBooked: Array<Spot> = []; 
     for(let i = 0; i < reservQ.length; i++) {
-        if (!(is_booked(dateStart, dateEnd, i, reservQ[i]))) {
+        if (!(is_booked(dateStart, dateEnd, reservQ[i]))) {
             notBooked.push(i); 
         }else {}
     }
     return notBooked; 
 }
 
-//ANVÄND VID BÖTER 
-function is_empty_spot(parking: ParkingTable, spot: number): boolean {
-    return parking.people[spot] === (undefined || null) ? true: false;  
+/**
+ * Checks if a parking spot is empty or not. 
+ * @param parking The parking lot you want to look at 
+ * @param spot the parking spot you are checking
+ * @returns Returns true if the spot is empty and false if not 
+ */
+export function is_empty_spot(parking: ParkingTable, spot: number): boolean {
+    return parking.keys[spot] === undefined 
+            ? true
+            : parking.keys[spot] === null
+            ? true
+            : false;  
 }
 
-
-//Lägg till ytterligare en funktion som anropas efter att timern gått en viss tid, en somvarnar om 15 minuter kvar, en som ger böter 
-
-function warn_user():void {}
-
-function give_boot():void {}
 
 //Modified prio queue
 /**
@@ -198,6 +197,13 @@ function give_boot():void {}
  * @modifies q such that e is added with priority prio
  */
 export function enqueue<T>(prio: number, e: T, q: Prio_Queue<T>) {
+    //Swaps two elements with each other 
+    function swap<T>(A: Array<T>, i: number, j: number) {
+        const tmp = A[i];
+        A[i] = A[j];
+        A[j] = tmp;
+    }
+
     const tail_index = q[1];
     q[2][tail_index] = [prio, e];
     if (!is_empty(q)) {
@@ -217,40 +223,9 @@ export function enqueue<T>(prio: number, e: T, q: Prio_Queue<T>) {
     q[1] = tail_index + 1;  // update tail index
 }
 
-function swap<T>(A: Array<T>, i: number, j: number) {
-    const tmp = A[i];
-    A[i] = A[j];
-    A[j] = tmp;
-}
-
-
-
-
-
-
-//Ska kanske ta bort 
-/**
- * 
- * @param parking 
- * @returns 
- */
-export function find_empty_parking(parking: ParkingTable): Array<number> { //UTÖKA
-    //Ska kolla upp alla parkeringsplatser som är tomma
-    //Ska returnera alla platser som användaren kan välja på i form av array?
-    //Ska kanske också kolla när parkeringsplatsen är tom? 
-    //Ev ta en till param, när den ska bokas 
-    const emptySpots: Array<number> = []; 
-    for(let i = 0; i < parking.size; i++){
-        if(is_empty_spot(parking, i)){
-            emptySpots.push(i); 
-        } else {}
-    }
-    return emptySpots; 
-}
-
 
 // helper function implementing probing from a given probe index i
-function probe_from<K, V, R>({keys, probe}: ParkingTable, //SPARA FOR NOW 
+function probe_from<K, V, R>({keys, probe}: ParkingTable, 
     key: Spot, i: number): number | undefined {
     function step(i: number): number | undefined {
         const index = probe(keys.length, key, i);
@@ -263,10 +238,19 @@ function probe_from<K, V, R>({keys, probe}: ParkingTable, //SPARA FOR NOW
     return step(i);
 }
 
-
-function find_person(reservations: Reservations, person: Person): Reservation | undefined {
+/**
+ * Function that looks if a person have made a reservation or not at a 
+ * specific spot 
+ * @param reservations is the priority queue with the reservations for a 
+ *          specific spot 
+ * @param person is the ID of the person whose reservation we are looking for 
+ * @returns Returns the reservation if it is found in the queue, if it is not 
+ *          found the function returns undefined. 
+ */
+export function find_person(reservations: Reservations, 
+                     person: Person): Reservation | undefined {
     const reservs = reservations; 
-    for(let i = 0; i < reservs.length; i++) {
+    while (!is_empty(reservs)) {
         const reserv = qhead(reservs); 
         if(reserv.person === person) {
             return reserv; 
@@ -277,22 +261,56 @@ function find_person(reservations: Reservations, person: Person): Reservation | 
     return undefined; 
 }
 
-
-//OBS; KANSKE LÄGG TILL SÅ ATT FÖRSTA PERSONEN I KÖN KAN PARKERA? 
-//Bra att ha kvar, finns funktion som gör så att man inte dubbel parkerar 
-//Utöka så att den startar timer när man parkerar 
-export function park_at(parking: ParkingTable, spot: number, person: Person): boolean {
-    function park_timer(startDate: Date, endDate: Date){
-        const secondsStart = startDate.getTime(); 
-        const secondsEnd = endDate.getTime();
-        start_timer(secondsEnd - secondsStart); 
+/**
+ * Checks wether or not todays date is within the starting date and end date 
+ * @param dateS the starting date 
+ * @param dateE the end date 
+ * @returns returns true if todays date is within the starting and end date
+ *      returns false if not. 
+ */
+export function is_within_date(dateS: Date, dateE: Date): boolean {
+    const today = make_date_number(new Date());
+    if(make_date_number(dateS) <= today && make_date_number(dateE) > today) {
+        return true;
+    } else {
+        return false; 
     }
+}
+
+/**
+ * The user parks their car in a spot
+ * Starts the parking timer that will warn the user when their time is out 
+ * Inserts the person parking in the parked array int the parking table to 
+ * symbolize that the spot is occupied 
+ * @param parking The parking table that the user wants to park at 
+ * @param spot The parking spot that the user wants to park
+ * @param person The user's ID
+ * @returns returns true if the person got put into the parked array. If the 
+ *      user didn't book that specific spot, if the parking table has no empty 
+ *      spots the function returns false, or if the person is trying to park at 
+ *      a time that is not within their booked time. 
+ */
+export function park_at(parking: ParkingTable, spot: number, 
+                        person: Person): boolean {
+    //Starts the timer 
+    function park_timer(startD: Date, endD: Date){
+        const startDate = new Date(startD);
+        const endDate = new Date(endD);
+        const secondsStart = startDate.getTime() / 1000; 
+        const secondsEnd = endDate.getTime() / 1000; 
+        start_timer(secondsEnd - secondsStart, spot, parking); 
+    }
+
+    //Helper function to insertFrom
     function insertAt(index: number): true {
         parking.keys[index] = spot;
-        parking.people[index] = person;
+        parking.parked[index] = person;
         parking.size = parking.size + 1;
         return true;
     }
+
+    //Tror kanske inte behövs?? Kommer inte behöva probea 
+    //Inserts a parson in the people array in the parking table 
     function insertFrom(i: number): boolean {
         const index = parking.probe(parking.keys.length, spot, i);
         if (parking.keys[index] === spot || parking.keys[index] === undefined) {
@@ -301,28 +319,59 @@ export function park_at(parking: ParkingTable, spot: number, person: Person): bo
             const location = probe_from(parking, spot, i);
             return insertAt(location === undefined ? index : location);
         } else {
-            return insertFrom(i + 1);
+            return false; 
         }
     }
-    const reservations = parking.reserved[spot]; 
-    const reservation = find_person(reservations, person); 
-    if(reservation === undefined) {
+
+    if(parking.keys.length === parking.size || !is_empty_spot(parking, spot)) {
         return false; 
     } else {
-        park_timer(reservation.dateStart, reservation.dateEnd); 
+        const reservations = parking.reserved[spot]; 
+        const reservation = find_person(reservations, person);
+
+        if (reservation === undefined) {
+            return false; 
+        } else if (is_within_date(reservation.dateStart, reservation.dateEnd)){
+            insertFrom(0);
+            park_timer(reservation.dateStart, reservation.dateEnd); 
+            update_park("saved_parking_lots.json", parking); 
+            return true; 
+        } else {
+            return false; 
+        }
     }
-    return parking.keys.length === parking.size ? false : insertFrom(0);
 }
 
-//Ändra så att timer avsluats, gör också så att man dequeas, om det är någon annan framför dequas den också 
-function leave_spot(parking: ParkingTable, spot: number): boolean {
+/**
+ * The user leaves the spot they were parked at, removes the user's reservation
+ * from the reservations queue (stored in the parking table). It also removes 
+ * any bookings prior to the one that is being removed from the queue.
+ * @param parking the parking lot 
+ * @param spot the parking spot the user is leaving 
+ * @param person the user's ID 
+ * @returns returns true if the person is found at the parking lot at the given 
+ *      spot, returns false otherwise. 
+ */
+export function leave_spot(parking: ParkingTable, spot: Spot, 
+                           person: Person): boolean {
     const index = probe_from(parking, spot, 0);
     if (index === undefined) {
         return false;
      } else { 
-        parking.keys[index] = null;
+        parking.keys[index] = null; 
         parking.size = parking.size - 1;
-        dequeue(parking.reserved[spot])
+        const reservs = parking.reserved[spot];
+        for(let i = 0; i < reservs.length; i++) {
+            const reserv = qhead(reservs); 
+            dequeue(reservs);
+            if (reserv.person === person) { 
+                parking.reserved[spot] = reservs;
+                break; 
+            } 
+        }
+        update_park("saved_parking_lots.json", parking); 
         return true;
     }
 }
+
+

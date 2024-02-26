@@ -1,11 +1,19 @@
 import {
     type ProbingHashtable, probe_linear, ph_empty, type HashFunction, ph_insert
-} from './hashtables'
+} from '../../lib/hashtables'
+
+import {
+    leave_spot, type ParkingTable, type Reservation
+} from'./project_booking'
+
+import {
+    type List, list, pair, type Pair
+} from '../../lib/list';
 
 import * as fs from 'fs';
 
 
-//Create user
+//Create user and user handling
 
 
 type user_record  = { name1: string,
@@ -72,20 +80,22 @@ module.exports.create_user = create_user;
 
 //Hashtable creation and functioning
 
+type history_table = ProbingHashtable<number, history_fine_record>;
 type user_table = ProbingHashtable<number, user_record>;
 type user_id_number = number;
-const user_hashtable_size: number = 10;
+
 const hash_func : HashFunction<number> = (key : number) => key; 
 
 /**
  * Creates an empty linear probing hashtable with a predefined size.
- * @returns {user_table} The empty hashtable to store user records.
+ * @param hashtable_size
+ * @returns The empty hashtable to store user records.
  */
-function create_user_hashtable(): user_table {
-    const user_hashtable: user_table = ph_empty(user_hashtable_size, probe_linear(hash_func));
-    return user_hashtable;
+function create_user_table(hashtable_size: number): user_table {
+    const hashtable: user_table = ph_empty(hashtable_size, probe_linear(hash_func));
+    return hashtable;
 }
-module.exports.create_user_hashtable = create_user_hashtable;
+module.exports.create_user_hashtable = create_user_table;
 
 /**
  * Finds the id in a user_record.
@@ -128,6 +138,8 @@ function create_and_add_user_to_table(hashtable: user_table): void {
     add_user_to_hashtable(user, user_id_number, hashtable);
 }
 
+// Funktion som plockar fram user record från ett hashtable
+
 
 //Save and load user data from saved_user_data.ts file
 
@@ -160,9 +172,164 @@ function load_user_hashtable_from_file(file: string): user_table {
         return JSON.parse(serialized_hashtable);
     } catch (error) {
         console.error('Error loading hashtable', error); 
-        return ph_empty(user_hashtable_size, probe_linear(hash_func));
+        const size = 10
+        return ph_empty(size, probe_linear(hash_func));
     }
 }
 module.exports.load_user_hashtable_from_file = load_user_hashtable_from_file;
+
+
+// Fine and parking history management
+
+
+type history_record = {
+    area: string,
+    spot: string,
+    start: Date | string,
+    end: Date | string
+}
+
+type fine_record = {
+    info: history_record,
+    cost: string
+}
+
+type history_fine_record = {
+    history: List<history_record>,
+    fine?: List<fine_record>
+}
+
+/**
+ * Creates a history record with information about parking area, spot, start time, and end time.
+ * @param area The parking area.
+ * @param spot The parking spot.
+ * @param start The start time of parking.
+ * @param end The end time of parking.
+ * @returns The history record.
+ */
+function create_history_record(area: string, spot: string, start: Date, end: Date): history_record {
+    const record = {
+        area: area,
+        spot: spot,
+        start: start,
+        end: end 
+    }
+    return record;
+}
+
+/**
+ * Creates a fine record based on a history record.
+ * @param record The history record associated with the fine.
+ * @returns The fine record.
+ */
+function create_fine_record(record: history_record): fine_record {
+    const result = {
+        info: record,
+        cost: "You have a 500kr fine from parking at ${record.area}."
+    }
+    return result;
+}
+
+
+/**
+ * Creates a history fine record combining history and fine information.
+ * @param history The history record.
+ * @param fine The fine record (optional).
+ * @returns The history fine record.
+ */
+function create_history_fine_record(history: history_record, fine?: fine_record): history_fine_record {
+    const record: history_fine_record = {
+        history: list(history),
+        fine: fine ? list(fine) : undefined
+    } 
+    return record;
+}
+
+/**
+ * Adds a history record to a history fine record.
+ * @param history The history record to be added.
+ * @param hf_record The existing history fine record.
+ * @returns The updated history fine record.
+ */
+function add_history_to_hf_record(history: history_record, hf_record: history_fine_record): history_fine_record {
+    const updatedHistory = append(hf_record.history, list(history));
+    return {
+        ...hf_record,
+        history: updatedHistory,
+    };
+}
+
+/**
+ * Adds a fine record to a history fine record.
+ * @param fine The fine record to be added.
+ * @param hf_record The existing history fine record.
+ * @returns The updated history fine record.
+ */
+function add_fine_to_hf_table(fine: fine_record, user: user_id_number, hf_record: history_fine_record) {
+    if (hf_record.fine === undefined) {
+        return hf_record.fine = list(fine);
+    } else {
+        return hf_record.fine = append(hf_record.fine, list(fine));
+    }
+}
+
+/**
+ * Creates a parking history user table.
+ * @param hashtable_size The size of the hashtable.
+ * @returns The created history table.
+ */
+function parking_history_user_table(hashtable_size: number): history_table {
+    const hashtable: history_table = ph_empty(hashtable_size, probe_linear(hash_func));
+    return hashtable;
+} 
+
+/**
+ * Adds a history fine record to a history table.
+ * @param record The history fine record to be added.
+ * @param user_id The user ID associated with the record.
+ * @param hashtable The history table.
+ * @returns The updated history table.
+ */
+function add_history_hashtable(record: history_fine_record, 
+    user_id: user_id_number, 
+    hashtable: history_table): history_table {
+    const insert = ph_insert(hashtable, user_id, record);
+    return hashtable;
+}
+
+/**
+ * Checks if parking time is over for a user at a specific spot.
+ * @param parking_table The parking table.
+ * @param user_id The user ID.
+ * @param spot The parking spot.
+ * @returns True if parking time is over, false otherwise.
+ */
+function is_parking_over(parking_table: ParkingTable, user_id: user_id_number, spot: number): boolean {
+    return leave_spot(parking_table, spot, user_id) ? false : true
+}
+
+
+
+// Om tiden har gått ut, skicka meddelande till user på något vis???
+function send_fine_message(user_id: user_id_number): string {
+    return "fine";
+}
+
+/**
+ * Gives a fine to a user if parking time is over.
+ * @param parking_table The parking table.
+ * @param user The user ID.
+ * @param spot The parking spot.
+ * @returns The fine message if a fine is given, otherwise undefined.
+ */
+function give_fine(parking_table: ParkingTable, user: user_id_number, spot: number): string | undefined {
+    const leave_spot = is_parking_over(parking_table, user, spot);
+    if (leave_spot === false) {
+        return send_fine_message(user);
+    } else {
+        return undefined;
+    }
+} 
+ 
 
 

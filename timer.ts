@@ -1,3 +1,4 @@
+import { Spot, ParkingTable, is_empty_spot } from "./project_booking";
 /**
  * Returns the largest integer that is equal to or less then a number.
  * @param {number} number A number
@@ -16,7 +17,7 @@ console.log(math_floor(0));
  * A timer that decreases every one second from a total amount of seconds.
  * @param {number} parking_time The amount of seconds to park
  */
-function start_timer(parking_time: number): void {
+export function start_timer(parking_time: number, spot: Spot, park: ParkingTable): void {
     let start = parking_time;
     let timer: any = setInterval(() => {
         let hours = math_floor(start / 60 / 60);
@@ -35,10 +36,15 @@ function start_timer(parking_time: number): void {
             clearInterval(timer);
             time_check = "Parking time is over"
             console.log('finnished', time_check);
+        } else if (is_empty_spot(park, spot)) {
+            clearInterval(timer); 
+            time_check = "You left your spot"; 
+            console.log('finnished', time_check);
         }
         start--;
     }, 1000)
 }
+
 
 // 1 hour
 // start_timer(3600);
