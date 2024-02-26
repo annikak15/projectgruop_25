@@ -98,7 +98,7 @@ export function ask_park(dateS: Date, dateE: Date, person: number): void {
                     //Kollar så att man väljer en ledig plats på parkeringen
                     while(!validAnswer) {
                         console.log("Choose one of these spots:");
-                        console.log(unbooked);
+                        console.log(unbooked.toString());
                         spot = Number(prompt("")); 
                         if(spot in unbooked) {
                             //Här avslutas while-loopen
@@ -158,7 +158,7 @@ export function leave(personID): void {
         console.log("press q to quit");
         const userInput = prompt("At what parking lot? ").toLocaleLowerCase(); 
         if(userInput === "q") {
-        
+            break;
         } else {
             const park = get_park_from_parkingLots(file, userInput);
             if (park === undefined) {
@@ -184,49 +184,19 @@ export function leave(personID): void {
 }
 
 //OM MAN VÄLJER ATT BOKA: 
-//const reservation = ask_date(personID);
+const reservation = ask_date(personID);
 
-//ask_park(reservation.dateStart, reservation.dateEnd, personID);
+ask_park(reservation.dateStart, reservation.dateEnd, personID);
 
 //OM MAN VÄLJER ATT PARKERA: 
 //Ta fram reservation (OBS! måste veta parkering och parkerings-plats)
 //Lättast för oss om användaren bara skriver in vart den vill parkera, men 
 //det blir inte lättast för användaren eftersom den måste komma ihåg allt 
-//parking(personID);
+parking(personID);
 
 
 //OM MAN VÄLJER ATT LÄMNA PARKERING 
 //samma som när man väljer att parkera, lättare för oss om användaren skriver in själv 
-//leave(personID);
+leave(personID);
 
-export function park_options(personID: number): void{
-    let userQuit = false;
-    while(userQuit === false) {
-        console.log("What do you want to do?");
-        console.log("Options:");
-        console.log("book a spot: B");
-        console.log("park at your booked spot: P");
-        console.log("leave your parking spot: L");
-        console.log("Quit: Q");
-        const answ = prompt("").toLocaleLowerCase(); 
-        if(answ === "b") {
-            const reservation = ask_date(personID);
-            ask_park(reservation.dateStart, reservation.dateEnd, personID);
-            console.log("Your booking is registered");
-        } else if(answ === "p") {
-            parking(personID);
-            console.log("You have parked at your spot")
-        } else if(answ === "l") {
-            leave(personID);
-            console.log("You have left your spot")
-        } else if(answ === "q") {
-            userQuit = true;
-
-        } else {
-            console.log("Invalid answer, please try again")
-        }
-    }
-}
-
-park_options(personID);
 
