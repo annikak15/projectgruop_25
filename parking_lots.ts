@@ -1,23 +1,52 @@
-import { ParkingTable, make_parking_table } from "./project_booking";
+import { ParkingTable } from "./project_booking";
+
+import { HashFunction, probe_linear } from "../lib/hashtables";
+
+import { empty } from "./lib/prio_queue";
 
 import * as fs from 'fs';
 
-//All parkinglots you can reserv a parking spot in
-let Ångströmslaboratoriet = make_parking_table(9, "ångströmslaboratoriet"); //rätt? 
-let Husargatan = make_parking_table(148, "husargatan"); //Hitta online, kanske sant
-let StudenternasIP = make_parking_table(110, "studenternas"); //Hitta inte lol
-let Grimhild = make_parking_table(400, "grimhild"); //rätt
-let Centralgaraget = make_parking_table(350, "centralgaraget"); //rätt 
+function make_parking_table(length: number, name: string): ParkingTable{
+    const hash_func : HashFunction<number> = (key : number) => key;  
+    const table: ParkingTable = { 
+        name: name,
+        keys: new Array(length), 
+        parked: new Array(length), 
+        reserved: new Array(length),
+        probe: probe_linear(hash_func), 
+        size: 0 };
+    for(let i = 0; i < table.reserved.length; i++) {
+        table.reserved[i] = empty(); 
+    }
+    return table; 
+}
 
+/**
+ * set_up is used to reset the system compleatly, emptying all parking lots.
+ * There is an additional test lot and an empty parking lot that is used 
+ * for testing
+ */
+function set_up():void {
+    //All parkinglots you can reserv a parking spot in
+    let Ångströmslaboratoriet = make_parking_table(9, "ångströmslaboratoriet"); 
+    let Husargatan = make_parking_table(148, "husargatan");
+    let StudenternasIP = make_parking_table(110, "studenternas"); 
+    let Grimhild = make_parking_table(400, "grimhild"); 
+    let Centralgaraget = make_parking_table(350, "centralgaraget"); 
+    let testLot = make_parking_table(3, "test"); //Test lot 
+    let emptyLot = make_parking_table(0, "empty"); //Empty parking lot
 
+    //For storing the empty parking lots in the file 
+    let parkingLots: Array<ParkingTable> = [Ångströmslaboratoriet, 
+                                            Husargatan,
+                                            StudenternasIP,
+                                            Grimhild,
+                                            Centralgaraget, 
+                                            testLot, 
+                                            emptyLot]
 
-//For storing the empty parking lots in the file 
-let parkingLots: Array<ParkingTable> = [Ångströmslaboratoriet, 
-                                        Husargatan,
-                                        StudenternasIP,
-                                        Grimhild,
-                                        Centralgaraget]
-
+    save_parking_to_file("saved_parking_lots.json", parkingLots);
+}
 
 
 /**
@@ -78,7 +107,13 @@ export function get_park_from_parkingLots(file: string, parkLot: string): Parkin
         for(let i = 0; i < parks.length; i++) {
             const park = parks[i]; 
             if (park.name === parkLot){
-                return park;
+                const hash_func : HashFunction<number> = (key : number) => key;
+                return {name: park.name,
+                        keys: park.keys,
+                        parked: park.parked,
+                        reserved: park.reserved,
+                        probe: probe_linear(hash_func),
+                        size: park.size}
             } else {}
         }
     } else {
@@ -88,7 +123,7 @@ export function get_park_from_parkingLots(file: string, parkLot: string): Parkin
 }
 
 
-//save_parking_to_file("saved_parking_lots.json", parkingLots);//Sparar alla (tomma) parkeringar till filen 
+//set_up(); //Sparar alla (tomma) parkeringar till filen 
 
 //console.log(load_parks_from_file("saved_parking_lots.json")); //Skriver ut alla sparade parkeringar i array 
 

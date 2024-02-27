@@ -6,8 +6,16 @@ import * as gq from './project_graph_queue';
 import * as g from './project_graph';
 import * as ps from "prompt-sync";
 
+import { ask_date, ask_park, parking, leave} from './booking_prompts';
+import { for_each } from '../../lib/list';
+
 const prompt: ps.Prompt = ps({ sigint: true });
+
+//Change to saved user table
 const user_hashtable = ud.create_user_table(10);
+
+//Change to saved record table
+const history_table = ud.create_history_table(10);
 
 const app_name = "Parking Buddy";
 const logo = [
@@ -36,10 +44,11 @@ const logo = [
     "................................................................................"
 ];
 
-let loggedin_user;
+let loggedin_user: ud.user_id_number;
+let current_user = 0;
 
 function start() {
-    ud.load_hashtable_from_file(ud.saved_user_file);
+    ud.load_user_hashtable_from_file(ud.saved_user_file);
     message_first_visit();
     login_or_signup();
 }
@@ -66,7 +75,7 @@ function login_or_signup() {
 
 function create_account() {
     const created_user = ud.create_and_add_user_to_table(user_hashtable);
-    const welcome = `Welcome back ${created_user.name1} ${created_user.name2}.`;
+    const welcome = `Welcome ${created_user.name1} ${created_user.name2}.`;
     loggedin_user = created_user.id;
     console.log(welcome);
     homepage_options();
@@ -77,7 +86,9 @@ function login(hashtable: ud.user_table) {
         if (user !== null) {
             const user_int = +user;
             loggedin_user = user_int;
+            current_user = user_int;
             const lookup = ud.find_user_record(user_int, hashtable);
+            
             if (lookup?.id === user_int) {
                 const welcome = `Welcome back ${lookup.name1} ${lookup.name2}.`
                 console.log(welcome);
@@ -94,45 +105,116 @@ function login(hashtable: ud.user_table) {
 
 function homepage_options() {
     console.log("What do you want to do?");
-    console.log('1. Find new parking');
+    console.log('1. Find parking');
     console.log('2. End ongoing parking');
     console.log('3. Check parking history');
+    console.log('4. Park at your booked spot');
+    console.log('5. Log out');
     console.log("");
 
-    const choise = prompt("Enter 1, 2 or 3.");
+    const choise = prompt("Enter 1, 2, 3, 4 or 5.");
     if (choise === "1") {
         find_parking();
     } 
     else if (choise === "2"){
-        //Avsluta parkering funktioner
+        leave(loggedin_user);
     }
     else if (choise === "3"){
-        //Kolla historik funktioner
-    } else {
+        display_history_fine(history_table);   
+    } 
+    else if ( choise === '4') {
+        parking(loggedin_user);
+    }
+    
+    else if (choise === '5') {
+        process.exit();
+    }
+    
+    else {
         console.log("Invalid input, please try again");
         homepage_options();
     }
 }
+
+// User history functions
+// Med antagande att history records skapas och läggs in på tablet
+// i samband med att en reservation/bokning sker.
+
+function display_history_fine(table: ud.history_table) {
+    // Retrieve parking history and fine history associated with the logged-in user
+    const record = ud.find_history_fine(loggedin_user, table);
+
+    if (record) {
+        // Retrieve parking history and fine history from the history-fine record
+        const userHistory = ud.get_user_history(record);
+        const userFineHistory = ud.get_user_fine_history(record);
+
+        // Display parking history
+        console.log("Parking History:");
+        if (userHistory) {
+            for_each(display_history, userHistory);
+        } else {
+            console.log("No parking history found.");
+        }
+
+        // Display fine history
+        console.log("Fine History:");
+        if (userFineHistory) {
+            for_each(display_fine, userFineHistory);
+        } else {
+            console.log("No fine history found.");
+        }
+    } else {
+        console.log("No history-fine record found for the logged-in user.");
+    }
+}
+
+function display_history(userHistory: ud.history_record): void {
+    console.log(`Area: ${userHistory?.area}, Spot: ${userHistory?.spot}, Start: ${userHistory?.start}, End: ${userHistory?.end}`);
+}
+
+function display_fine(userFineHistory: ud.fine_record): void {
+    console.log(`Info: ${userFineHistory.info.area}, Cost: ${userFineHistory.cost}`);
+}
+
+// Find parking functions
 
 function find_parking() {
     const answer_place = prompt('What is your location: 1 - Ångström, 2 - Centralen: ')
             
     if ( answer_place === '1') {
         console.log(gq.Find_Parking_lots(gq.graph_uppsala, 0));
+        book_parking();
+        
     }
     else if (answer_place === '2') {
         console.log(gq.Find_Parking_lots(gq.graph_uppsala, 1)); 
+        book_parking();
+
     } else {
         console.log('Not valid input, try again');
         find_parking();
     }
-
-    //Djupdyk i hur man efter detta lyckas boka 
-
 }
 
-function end_parking() {
-    // Ska avsluta pågående parkering
+function book_parking() {
+    const answer = prompt('Do you want to book parking? (yes/no):')
+
+    if(answer === 'yes'){
+        const reservation = ask_date(loggedin_user);
+        ask_park(reservation.dateStart, reservation.dateEnd, loggedin_user);
+        console.log("Your booking is registered");
+    }
+
+    else if (answer === 'no') {
+        homepage_options(); 
+    }
+
+    else {
+        console.log('invald input');
+        book_parking();
+    }
 }
+
 
 start();

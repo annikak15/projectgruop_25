@@ -11,9 +11,6 @@ import { Prio_Queue, empty, dequeue, head, is_empty, display_queue, swap
 
 } from '../../PKD/lib/prio_queue'
 
-import * as PromptSync from "prompt-sync";
-
-const prompt: PromptSync.Prompt = PromptSync({ sigint: true });
 
 /**
  * Represents an edge in a weighted graph with a target node and an edge weight.
@@ -301,15 +298,20 @@ export function Find_Parking_lots(Graph: WeightedAdjacencyList, startnode: numbe
     return Parking_lot_names;
 }
 
-
+/**
+ * graph_uppsala is a graph representation of Uppsala, node 0 is Ångström and node 1 is Centralen.
+ * The rest of the nodes are parking lots. 
+ * It is possible to add more parking lots and locations. When adding additional parking lots, 
+ * the const All_Parking_lots needs to be updated accordingly.
+ */
 export const graph_uppsala: WeightedAdjacencyList = {
    
     adj: [
 
-        // Node 0 is connected to Node 1 with a weight of 10, and Node 2 with a weight of 3
+        // Node 0: Ångstöm is connected to Node 1 with a weight of 10, and Node 2 with a weight of 3
          list({ target: 1, weight: 15 }, { target: 2, weight: 3 }, {target: 3, weight: 5}, {target: 5, weight: 1} ),
         
-        // Node 1 is connected back to Node 0 with a weight of 10, and to Node 3 with a weight of 5
+        // Node 1: Centralen is connected back to Node 0 with a weight of 10, and to Node 3 with a weight of 5
         list({ target: 0, weight: 15}, { target: 3, weight: 8 }, {target: 4, weight: 3}, {target: 6, weight: 2}),
         
         // Node 2 is connected back to Node 0 with a weight of 3, and to Node 3 with a weight of 8
@@ -320,13 +322,16 @@ export const graph_uppsala: WeightedAdjacencyList = {
        
         list({ target: 1, weight: 3 }, {target: 3, weight: 6}),
     
-        list({ target: 0, weight: 1 }),
+        list({ target: 0, weight: 1 }, {target: 7, weight: 3}),
     
-        list ({target: 1, weight: 2}),
-    
+        list ({target: 1, weight: 2}, {target: 7, weight: 2}),
+
+        list ({target: 5, weight: 3}, {target: 6, weight: 2})
+
       ],
-      size: 7
+
+      size: 8
 }; 
-       
+    
 //console.log(Dijkstras_alg(graph_uppsala, 0));
 console.log(JSON.stringify(Find_Parking_lots(graph_uppsala, 0)));

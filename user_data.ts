@@ -1,9 +1,9 @@
 import {
-    type ProbingHashtable, probe_linear, ph_empty, type HashFunction, ph_insert
+    type ProbingHashtable, probe_linear, ph_empty, type HashFunction, ph_insert, ph_lookup
 } from '../../lib/hashtables'
 
 import {
-    leave_spot, type ParkingTable, type Reservation
+    leave_spot, type ParkingTable, type Reservation, is_empty_spot
 } from'./project_booking'
 
 import {
@@ -80,18 +80,18 @@ module.exports.create_user = create_user;
 
 //Hashtable creation and functioning
 
-type history_table = ProbingHashtable<number, history_fine_record>;
-type user_table = ProbingHashtable<number, user_record>;
-type user_id_number = number;
+export type history_table = ProbingHashtable<number, history_fine_record>;
+export type user_table = ProbingHashtable<number, user_record>;
+export type user_id_number = number;
 
-const hash_func : HashFunction<number> = (key : number) => key; 
+export const hash_func : HashFunction<number> = (key : number) => key; 
 
 /**
  * Creates an empty linear probing hashtable with a predefined size.
  * @param hashtable_size
  * @returns The empty hashtable to store user records.
  */
-function create_user_table(hashtable_size: number): user_table {
+export function create_user_table(hashtable_size: number): user_table {
     const hashtable: user_table = ph_empty(hashtable_size, probe_linear(hash_func));
     return hashtable;
 }
@@ -100,9 +100,9 @@ module.exports.create_user_hashtable = create_user_table;
 /**
  * Finds the id in a user_record.
  * @param {user_record} user The user to to get id of.
- * @returns {user_id} The id of the user
+ * @returns {user_id_number} The id of the user
  */
-function get_user_id(user: user_record): user_id_number {
+export function get_user_id(user: user_record): user_id_number {
     const user_id = user.id;
     return user_id;
 }
@@ -115,7 +115,7 @@ module.exports.get_user_id = get_user_id;
  * @param {user_table} hashtable The hashtable to store user.
  * @returns {user_table} The updated user hashtable.
  */
-function add_user_to_hashtable(user: user_record, 
+export function add_user_to_hashtable(user: user_record, 
                                 user_id: user_id_number, 
                                 hashtable: user_table): user_table {
     const insert_user = ph_insert(hashtable, user_id, user);
@@ -131,20 +131,29 @@ module.exports.add_user_to_hashtable = add_user_to_hashtable;
  * @param {user_table} hashtable A alreade created hashtable to store user_records
  * @return void.
  */
-function create_and_add_user_to_table(hashtable: user_table): void {
+export function create_and_add_user_to_table(hashtable: user_table): user_record {
     const user_string = get_user_info();
     const user = create_user(user_string);
     const user_id_number = get_user_id(user);
     add_user_to_hashtable(user, user_id_number, hashtable);
+    return user;
 }
 
-// Funktion som plockar fram user record från ett hashtable
-
+/**
+ * Finds a user record in a user table, using the user id number.
+ * @param {user_id_number} user The users personal id number 
+ * @param {user_table} table The hashtable that stores user records.
+ * @returns {user_record | undefined} the user record or undefined if no match is found.
+ */
+export function find_user_record(user: user_id_number, table: user_table): user_record | undefined {
+    const record = ph_lookup(table, user);
+    return record;
+}
 
 //Save and load user data from saved_user_data.ts file
 
 
-const saved_user_file: string = '.\saved_user_data.json';
+export const saved_user_file: string = '.\saved_user_data.json';
 
 /**
  * Serializes a hashingtable into string and saves it to an additional file.
@@ -152,7 +161,7 @@ const saved_user_file: string = '.\saved_user_data.json';
  * @param {user_table} hashtable The hashtable containing user data.
  * @returns {void} 
  */
-function save_user_hash_to_file(file: string, hashtable: user_table ): void {
+export function save_user_hash_to_file(file: string, hashtable: user_table ): void {
     const serialized_hashtable = JSON.stringify(hashtable);
     fs.writeFileSync(file, serialized_hashtable);
 }
@@ -166,7 +175,7 @@ module.exports.save_user_hash_to_file = save_user_hash_to_file;
  * @param {string} file The file containing the serialized hashtable.
  * @returns {ProbingHashtable} A probing hashtable that contains the user records.
  */
-function load_user_hashtable_from_file(file: string): user_table {
+export function load_user_hashtable_from_file(file: string): user_table {
     try {
         const serialized_hashtable = fs.readFileSync(file, 'utf-8');
         return JSON.parse(serialized_hashtable);
@@ -182,19 +191,19 @@ module.exports.load_user_hashtable_from_file = load_user_hashtable_from_file;
 // Fine and parking history management
 
 
-type history_record = {
+export type history_record = {
     area: string,
     spot: string,
     start: Date | string,
     end: Date | string
 }
 
-type fine_record = {
+export type fine_record = {
     info: history_record,
     cost: string
 }
 
-type history_fine_record = {
+export type history_fine_record = {
     history: List<history_record>,
     fine?: List<fine_record>
 }
@@ -207,7 +216,7 @@ type history_fine_record = {
  * @param end The end time of parking.
  * @returns The history record.
  */
-function create_history_record(area: string, spot: string, start: Date, end: Date): history_record {
+export function create_history_record(area: string, spot: string, start: Date, end: Date): history_record {
     const record = {
         area: area,
         spot: spot,
@@ -222,7 +231,7 @@ function create_history_record(area: string, spot: string, start: Date, end: Dat
  * @param record The history record associated with the fine.
  * @returns The fine record.
  */
-function create_fine_record(record: history_record): fine_record {
+export function create_fine_record(record: history_record): fine_record {
     const result = {
         info: record,
         cost: "You have a 500kr fine from parking at ${record.area}."
@@ -237,7 +246,7 @@ function create_fine_record(record: history_record): fine_record {
  * @param fine The fine record (optional).
  * @returns The history fine record.
  */
-function create_history_fine_record(history: history_record, fine?: fine_record): history_fine_record {
+export function create_history_fine_record(history: history_record, fine?: fine_record): history_fine_record {
     const record: history_fine_record = {
         history: list(history),
         fine: fine ? list(fine) : undefined
@@ -251,7 +260,7 @@ function create_history_fine_record(history: history_record, fine?: fine_record)
  * @param hf_record The existing history fine record.
  * @returns The updated history fine record.
  */
-function add_history_to_hf_record(history: history_record, hf_record: history_fine_record): history_fine_record {
+export function add_history_to_hf_record(history: history_record, hf_record: history_fine_record): history_fine_record {
     const updatedHistory = append(hf_record.history, list(history));
     return {
         ...hf_record,
@@ -265,7 +274,7 @@ function add_history_to_hf_record(history: history_record, hf_record: history_fi
  * @param hf_record The existing history fine record.
  * @returns The updated history fine record.
  */
-function add_fine_to_hf_table(fine: fine_record, user: user_id_number, hf_record: history_fine_record) {
+export function add_fine_to_hf_table(fine: fine_record, user: user_id_number, hf_record: history_fine_record) {
     if (hf_record.fine === undefined) {
         return hf_record.fine = list(fine);
     } else {
@@ -278,7 +287,7 @@ function add_fine_to_hf_table(fine: fine_record, user: user_id_number, hf_record
  * @param hashtable_size The size of the hashtable.
  * @returns The created history table.
  */
-function parking_history_user_table(hashtable_size: number): history_table {
+export function create_history_table(hashtable_size: number): history_table {
     const hashtable: history_table = ph_empty(hashtable_size, probe_linear(hash_func));
     return hashtable;
 } 
@@ -290,11 +299,42 @@ function parking_history_user_table(hashtable_size: number): history_table {
  * @param hashtable The history table.
  * @returns The updated history table.
  */
-function add_history_hashtable(record: history_fine_record, 
+export function add_history_hashtable(record: history_fine_record, 
     user_id: user_id_number, 
     hashtable: history_table): history_table {
     const insert = ph_insert(hashtable, user_id, record);
     return hashtable;
+}
+
+/**
+ * Finds a users history-fine record in a history table
+ * @param {user_id_number} user The users personal id number
+ * @param {history_table} table The hashtable containing history-fine records
+ * @returns {history_fine_record} The record containing history records and fine records
+ */
+export function find_history_fine(user: user_id_number, table: history_table): history_fine_record | undefined {
+    const record = ph_lookup(table, user);
+    return record;
+}
+
+/**
+ *  Retrieves the history of a history fine record.
+ * @param {history_fine_record} record the users history-fine record.
+ * @returns {List<history_record>} a list of history records.
+ */
+export function get_user_history(record: history_fine_record): List<history_record> {
+    const history = record.history;
+    return history;
+}
+
+/**
+ * Retrieves the fines of a history fine record.
+ * @param {history_fine_record} record the users history-fine record.
+ * @returns {List<fine_record> | undefined} a list of fine_records or undefined if not found.
+ */
+export function get_user_fine_history(record: history_fine_record): List<fine_record> | undefined {
+    const fine = record.fine;
+    return fine;
 }
 
 /**
@@ -304,15 +344,8 @@ function add_history_hashtable(record: history_fine_record,
  * @param spot The parking spot.
  * @returns True if parking time is over, false otherwise.
  */
-function is_parking_over(parking_table: ParkingTable, user_id: user_id_number, spot: number): boolean {
-    return leave_spot(parking_table, spot, user_id) ? false : true
-}
-
-
-
-// Om tiden har gått ut, skicka meddelande till user på något vis???
-function send_fine_message(user_id: user_id_number): string {
-    return "fine";
+export function is_parking_over(parking_table: ParkingTable, user_id: user_id_number, spot: number): boolean {
+    return is_empty_spot(parking_table, spot) ? false : true
 }
 
 /**
@@ -322,14 +355,22 @@ function send_fine_message(user_id: user_id_number): string {
  * @param spot The parking spot.
  * @returns The fine message if a fine is given, otherwise undefined.
  */
-function give_fine(parking_table: ParkingTable, user: user_id_number, spot: number): string | undefined {
+export function need_fine(parking_table: ParkingTable,
+                        user: user_id_number, 
+                        spot: number,
+                        fine:fine_record): string | undefined {
     const leave_spot = is_parking_over(parking_table, user, spot);
     if (leave_spot === false) {
-        return send_fine_message(user);
     } else {
         return undefined;
     }
+
+}
+
+function give_fine(user: user_id_number, fine: fine_record, table: history_table): void {
+   
 } 
  
 
 
+                        
