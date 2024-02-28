@@ -57,7 +57,7 @@ export function get_user_info(): string {
     } while (!user_last_name);
 
     // Prompt for personal ID number and ensure it's a valid number
-    do {
+    do { 
         const person_id_input = prompt("Enter personal id-number: ");
         // Ensure the input consists only of digits
         if (!/^\d+$/.test(person_id_input)) {

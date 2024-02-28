@@ -46,8 +46,7 @@ const logo = [
 ];
 
 let loggedin_user: ud.user_id_number;
-let current_user = 0;
-
+let current_user = 
 
 //GFunction ask_date showing prompts before called????
 
