@@ -352,7 +352,10 @@ export function park_at(park: ParkingTable, spot: number,
                                              finedReserv.dateStart, 
                                              finedReserv.dateEnd);
         if(fineHistory === undefined) {
-            const newRecord = create_history_fine_record(record);
+            const newRecord = create_history_fine_record(parking.name, 
+                                                         spot.toString(), 
+                                                         finedReserv.dateStart, 
+                                                         finedReserv.dateEnd);
             add_fine_to_hf_table(create_fine_record(record), 
                                  toBeFined, 
                                  newRecord);
