@@ -1,7 +1,5 @@
 import { ParkingTable } from "./project_booking";
 
-import { HashFunction, probe_linear } from "../lib/hashtables";
-
 import { empty } from "./lib/prio_queue";
 
 import * as fs from 'fs';
@@ -11,14 +9,12 @@ import * as fs from 'fs';
  * @param length the number of parking spots in the parking lot 
  * @returns Returns an empty ParkingTable 
  */
-function make_parking_table(length: number, name: string): ParkingTable{
-    const hash_func : HashFunction<number> = (key : number) => key;  
+function make_parking_table(length: number, name: string): ParkingTable{ 
     const table: ParkingTable = { 
         name: name,
         keys: new Array(length), 
         parked: new Array(length), 
-        reserved: new Array(length),
-        probe: probe_linear(hash_func), 
+        reserved: new Array(length), 
         size: 0 };
     for(let i = 0; i < table.reserved.length; i++) {
         table.reserved[i] = empty(); 
@@ -112,19 +108,12 @@ export function get_park_from_parkingLots(file: string, parkLot: string): Parkin
         for(let i = 0; i < parks.length; i++) {
             const park = parks[i]; 
             if (park.name === parkLot){
-                const hash_func : HashFunction<number> = (key : number) => key;
-                return {name: park.name,
-                        keys: park.keys,
-                        parked: park.parked,
-                        reserved: park.reserved,
-                        probe: probe_linear(hash_func),
-                        size: park.size}
+                return park;
             } else {}
         }
     } else {
         return undefined; 
     }
-    return undefined; 
 }
 
 
