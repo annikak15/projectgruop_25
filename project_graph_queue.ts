@@ -7,7 +7,7 @@ import {
     type ListGraph, build_array
 } from '../../PKD/lib/graphs';
 
-import { Prio_Queue, empty, dequeue, head, is_empty, display_queue, swap
+import { Prio_Queue, empty, dequeue, qhead, is_empty, display_queue, swap
 
 } from '../../PKD/lib/prio_queue'
 
@@ -138,7 +138,7 @@ export const All_Parking_lots: Parking_lot = {
     list_of_all_parking: [{node_number:2, name: "Aimo parkering - Husargatan (Hemköp)"}, 
                           {node_number: 3, name: "Studenternas IP parkering"}, 
                           {node_number: 4, name: "Aimo park Grimhild"},
-                          { node_number: 5, name: "Aimo park - Ångströmslaboratoriet" },
+                          { node_number: 5, name: "Aimo park - Angstromslaboratoriet" },
                           { node_number: 6, name: "Centralgaraget" }],
     number_of_parking: 5
 }; 
@@ -149,7 +149,9 @@ export const All_Parking_lots: Parking_lot = {
  */
 export const All_places: Locations = {
     list_of_all_places: [{node_number: 0, name: "Ångström"}, 
-                         {node_number: 1, name: "Centralen"}],
+                         {node_number: 1, name: "Centralen"},
+                         {node_number: 7, name: "BMC"},
+                         {node_number: 8, name: "Akademiska sjukhuset"}],
     number_of_places: 2
 }; 
 
@@ -188,14 +190,15 @@ export function enqueue<T>(prio: number, e: T, q: Prio_Queue<T>) {
  * @param startNode a positiv number to start from
  * @precondition Graph can't have negative weight values
  * @returns a record with parent to node and distance from start node
- * @returns null if the start node does not exist in the graph. 
+ * @returns null if the start node does not exist in the graph. or the graph is empty. 
  */
-export function Dijkstras_alg(Graph: WeightedAdjacencyList, startNode: number): Parents_and_distance| null {
+export function Dijkstras_alg(Graph: WeightedAdjacencyList, startNode: number): Parents_and_distance | null {
 
-    if (startNode < 0 || startNode >= Graph.size) {
-        console.log("Error: Start node does not exist in the graph.");
+    if (startNode < 0 || startNode >= Graph.size || Graph.size === 0) {
+        console.log("Error: Empty graph or start node does not exist in the graph.");
         return null;
     }
+
     const size: number = Graph.size
     const parents: Array<number | null> = build_array(size, () => null); 
     const distance: Array<number> = build_array(size, () => Infinity); 
@@ -206,7 +209,7 @@ export function Dijkstras_alg(Graph: WeightedAdjacencyList, startNode: number): 
     enqueue(0, startNode, queue); 
 
     while (!is_empty(queue) ) {
-        const currentnode: number = head(queue); 
+        const currentnode: number = qhead(queue); 
         dequeue(queue)!;
         
        // visited[currentnode] = true; 
@@ -250,10 +253,11 @@ export function Dijkstras_alg(Graph: WeightedAdjacencyList, startNode: number): 
  * @param Graph a weighted undirected graph
  * @param startnode a positive number 
  * @precondition Graph can't have negative weight values
- * @returns an array with the names of the parking lots in order from closest to furthest from start node
+ * @returns An array containing the names of the parking lots and their corresponding distances from the start node, 
+ * sorted in increasing order from the closest to the furthest.
  * @returns undefined if the start node does not exist in the graph or if the start node does not have any adjecent nodes. 
  */
-export function Find_Parking_lots(Graph: WeightedAdjacencyList, startnode: number): Array<string> | void{
+export function Find_Parking_lots(Graph: WeightedAdjacencyList, startnode: number): Array<string> | void {
     const result = Dijkstras_alg(Graph, startnode);
     
     if (is_null(result)) {
@@ -284,18 +288,27 @@ export function Find_Parking_lots(Graph: WeightedAdjacencyList, startnode: numbe
         parking_all_info.push(Parking_node_name_distance);
 
         }
-}
+   }
 
     if (parking_all_info.length === 0) {
         console.log("No parking lots are reachable from the start node.");
         return;
-}
+    }
 
     const sorted_parking_lots = parking_all_info.sort((a, b) => a.distance - b.distance);
 
-    const Parking_lot_names = sorted_parking_lots.map(lot => lot.name);
+    let parkingLotNamesAndDistances: string[] = [];
 
-    return Parking_lot_names;
+    for (let i = 0; i < sorted_parking_lots.length; i = i + 1) {
+        const name = sorted_parking_lots[i].name;
+        const distance = sorted_parking_lots[i].distance;
+        const nameAndDistance = `${name} - ${distance} min`;
+        parkingLotNamesAndDistances.push(nameAndDistance);
+    }
+
+    //const Parking_lot_names = sorted_parking_lots.map(lot => lot.name); // Only gets the names of parking lots not distances.
+
+    return parkingLotNamesAndDistances;
 }
 
 /**
@@ -308,29 +321,36 @@ export const graph_uppsala: WeightedAdjacencyList = {
    
     adj: [
 
-        // Node 0: Ångstöm is connected to Node 1 with a weight of 10, and Node 2 with a weight of 3
-         list({ target: 1, weight: 15 }, { target: 2, weight: 3 }, {target: 3, weight: 5}, {target: 5, weight: 1} ),
+        //node 0 = Ångström
+        list({ target: 1, weight: 15 }, { target: 2, weight: 3 }, {target: 3, weight: 5}, {target: 5, weight: 1}, {target: 7, weight: 4} ),
         
-        // Node 1: Centralen is connected back to Node 0 with a weight of 10, and to Node 3 with a weight of 5
+        //node 1 = centralen
         list({ target: 0, weight: 15}, { target: 3, weight: 8 }, {target: 4, weight: 3}, {target: 6, weight: 2}),
-        
-        // Node 2 is connected back to Node 0 with a weight of 3, and to Node 3 with a weight of 8
-        list({ target: 0, weight: 3 }, {target: 3, weight: 4}, ),
-        
-        // Node 3 is connected back to Node 1 with a weight of 5, and to Node 2 with a weight of 8
-        list({ target: 0, weight: 5 }, { target: 1, weight: 8 }, {target: 4, weight: 6},  {target: 2, weight: 4} ),
-       
-        list({ target: 1, weight: 3 }, {target: 3, weight: 6}),
-    
-        list({ target: 0, weight: 1 }, {target: 7, weight: 3}),
-    
-        list ({target: 1, weight: 2}, {target: 7, weight: 2}),
 
-        list ({target: 5, weight: 3}, {target: 6, weight: 2})
+        //node 2
+        list({ target: 0, weight: 3 }, {target: 3, weight: 4}, {target: 7, weight: 2}, {target: 8, weight: 11}),
+
+        //node 3
+        list({ target: 0, weight: 5 }, { target: 1, weight: 8 }, {target: 4, weight: 6},  {target: 2, weight: 4}, {target: 8, weight: 3} ),
+       
+        //node 4
+        list({ target: 1, weight: 3 }, {target: 3, weight: 6}, {target: 8, weight: 6}),
+        
+        //node 5
+        list({ target: 0, weight: 1 }),
+    
+        //node 6
+        list ({target: 1, weight: 2}),
+
+        //node 7
+        list ({target: 0, weight: 4}, {target: 2, weight: 2}),
+
+        //node 8
+        list ({target: 2, weight: 11}, {target: 3, weight: 3}, {target: 4, weight: 6})
 
       ],
 
-      size: 8
+      size: 9
 }; 
     
 //console.log(Dijkstras_alg(graph_uppsala, 0));
