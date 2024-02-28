@@ -1,5 +1,3 @@
-import { type ProbingFunction, type HashFunction, probe_linear
-} from '../lib/hashtables'
 import { Prio_Queue, empty, is_empty, dequeue, qhead, display_queue } from './lib/prio_queue';
 
 import { get_park_from_parkingLots, update_park } from './parking_lots';
@@ -13,6 +11,7 @@ import { add_fine_to_hf_table, create_fine_record, create_history_fine_record,
 
 import * as ud from './user_data';
 
+//OM KRÅNGEL KAN FELET VARA HÄR 
 const history_table = ud.create_history_table(10);
 
 
@@ -60,7 +59,6 @@ export type Reservations = Prio_Queue<Reservation>;
  * @param parked array of people that is currantly parked in a parking spot 
  * @param reserved array of prio queues that stores reservations for each 
  *      parking spot 
- * @param probe the probing function
  * @param size the number of elements currently in the table
  * @invariant If keys[i] is neither null nor undefined, 
  *     then people[i] contains a person.
@@ -74,7 +72,6 @@ export type ParkingTable = {
     readonly keys:  Array<Spot | null | undefined >,
     readonly parked:  Array<Person>,
     reserved: Array<Reservations>
-    readonly probe: ProbingFunction<Spot>,
     size: number // number of elements
 };
 
@@ -242,21 +239,6 @@ export function enqueue<T>(prio: number, e: T, q: Prio_Queue<T>) {
     q[1] = tail_index + 1;  // update tail index
 }
 
-
-// helper function implementing probing from a given probe index i
-function probe_from<K, V, R>({keys, probe}: ParkingTable, 
-    key: Spot, i: number): number | undefined {
-    function step(i: number): number | undefined {
-        const index = probe(keys.length, key, i);
-        return i === keys.length || keys[index] === undefined
-            ? undefined
-            : keys[index] === key
-            ? index
-            : step(i + 1);
-    }
-    return step(i);
-}
-
 /**
  * Function that looks if a person have made a reservation or not at a 
  * specific spot 
@@ -312,25 +294,14 @@ export function is_within_date(dateS: Date, dateE: Date): boolean {
 export function park_at(park: ParkingTable, spot: number, 
                         person: Person): boolean {
     let parking = park; 
-    //Helper function to insertFrom
+    //Inserts a person in the people array in the parking table 
     function insertAt(index: number): true {
         parking.keys[index] = spot;
         parking.parked[index] = person;
         parking.size = parking.size + 1;
         return true;
     }
-    //Inserts a parson in the people array in the parking table 
-    function insertFrom(i: number): boolean {
-        const index = parking.probe(parking.keys.length, spot, i);
-        if (parking.keys[index] === spot || parking.keys[index] === undefined) {
-            return insertAt(index);
-        } else if (parking.keys[index] === null) {
-            const location = probe_from(parking, spot, i);
-            return insertAt(location === undefined ? index : location);
-        } else {
-            return false; 
-        }
-    }
+    
     if(parking.keys.length === parking.size || parking.parked[spot] === person){ 
         return false; 
     } else {}
@@ -366,11 +337,11 @@ export function park_at(park: ParkingTable, spot: number,
         }
         leave_spot(parking, spot, toBeFined);
         parking = get_park_from_parkingLots("saved_parking_lots.json", park.name)!
-        insertFrom(0);
+        insertAt(spot);
         update_park("saved_parking_lots.json", parking); 
         return true;
     } else {}
-    insertFrom(0);
+    insertAt(spot);
     update_park("saved_parking_lots.json", parking); 
     return true; 
 }
@@ -390,11 +361,10 @@ export function park_at(park: ParkingTable, spot: number,
  */
 export function leave_spot(parking: ParkingTable, spot: Spot, 
                            person: Person): boolean {
-    const index = probe_from(parking, spot, 0);
-    if (index === undefined || parking.parked[index] !== person) {
+    if (parking.parked[spot] !== person) {
         return false;
      } else { 
-        parking.keys[index] = null; 
+        parking.keys[spot] = null; 
         parking.size = parking.size - 1;
         const reservs = parking.reserved[spot];
         const length = reservs.length;
