@@ -1,8 +1,19 @@
 import { type ProbingFunction, type HashFunction, probe_linear
 } from '../lib/hashtables'
 import { Prio_Queue, empty, is_empty, dequeue, qhead } from './lib/prio_queue';
+
 import { update_park } from './parking_lots';
+
 import { start_timer } from './timer';
+
+import { add_fine_to_hf_table, create_fine_record, create_history_fine_record, 
+        create_history_record, find_history_fine, find_user_record, 
+        get_user_fine_history, get_user_history//, history_table 
+} from './user_data';
+
+import * as ud from './user_data';
+
+const history_table = ud.create_history_table(10);
 
 
 /**
@@ -85,7 +96,14 @@ export function make_booking (dateStart: Date, dateEnd: Date, spot: Spot,
         dateEnd: dateEnd}; 
     const dateNr = make_date_number(dateStart); 
     enqueue(dateNr, reservation, reservations); 
-    update_park("saved_parking_lots.json", parking); 
+    update_park("saved_parking_lots.json", parking);
+    //KANSKE ÄNDRA???
+    
+    const record = create_history_record(parking.name, 
+                                         spot.toString(), 
+                                         dateStart, 
+                                         dateEnd);
+    
 }
 
 /**
@@ -294,15 +312,6 @@ export function is_within_date(dateS: Date, dateE: Date): boolean {
  */
 export function park_at(parking: ParkingTable, spot: number, 
                         person: Person): boolean {
-    //Starts the timer 
-    function park_timer(endD: Date){
-        const todayDate = new Date();
-        const endDate = new Date(endD);
-        const secondsStart = todayDate.getTime() / 1000; 
-        const secondsEnd = endDate.getTime() / 1000; 
-        start_timer(secondsEnd - secondsStart, spot, parking); 
-    }
-
     //Helper function to insertFrom
     function insertAt(index: number): true {
         parking.keys[index] = spot;
@@ -311,7 +320,6 @@ export function park_at(parking: ParkingTable, spot: number,
         return true;
     }
 
-    //Tror kanske inte behövs?? Kommer inte behöva probea 
     //Inserts a parson in the people array in the parking table 
     function insertFrom(i: number): boolean {
         const index = parking.probe(parking.keys.length, spot, i);
@@ -325,7 +333,20 @@ export function park_at(parking: ParkingTable, spot: number,
         }
     }
 
-    if(parking.keys.length === parking.size || !is_empty_spot(parking, spot)) {
+    //Finds parked user that is about to get a parking ticket
+    function find_user_to_be_fined(personID: Person): Reservation | undefined{
+        const reservs = parking.reserved[spot]
+        for(let i = 0; i < reservs.length; i++) {
+            const reserv = qhead(parking.reserved[spot]); 
+            dequeue(reservs);
+            if (reserv.person === person) { 
+                return reserv;
+            } 
+        } 
+        return undefined;
+    }
+
+    if(parking.keys.length === parking.size) {
         return false; 
     } else {
         const reservations = parking.reserved[spot]; 
@@ -334,10 +355,43 @@ export function park_at(parking: ParkingTable, spot: number,
         if (reservation === undefined) {
             return false; 
         } else if (is_within_date(reservation.dateStart, reservation.dateEnd)){
-            insertFrom(0);
-            park_timer(reservation.dateEnd); 
-            update_park("saved_parking_lots.json", parking); 
-            return true; 
+
+            if (!is_empty_spot(parking, spot) && parking.parked[spot] !== person) {
+                const toBeFined = parking.parked[spot];
+                const finedReserv = find_user_to_be_fined(toBeFined);
+                if(finedReserv === undefined) {
+                    return false;
+                } else {
+                    const fineHistory = find_history_fine(toBeFined, 
+                                                          history_table); 
+                    const record = create_history_record(
+                                        parking.name, 
+                                        spot.toString(), 
+                                        finedReserv.dateStart, 
+                                        finedReserv.dateEnd);
+
+                    if(fineHistory === undefined) {
+                        const newRecord = create_history_fine_record(record);
+                        add_fine_to_hf_table(create_fine_record(record), 
+                                             toBeFined, 
+                                             newRecord);
+                    } else {
+                        add_fine_to_hf_table(create_fine_record(record), 
+                                             toBeFined, 
+                                             fineHistory);
+                    }
+                    leave_spot(parking, spot, toBeFined);
+                    insertFrom(0);
+                    update_park("saved_parking_lots.json", parking); 
+                    return true; 
+                }
+            } else if(parking.parked[spot] === person) {
+                return false; 
+            } else {
+                insertFrom(0);
+                update_park("saved_parking_lots.json", parking); 
+                return true; 
+            }
         } else {
             return false; 
         }
@@ -378,5 +432,3 @@ export function leave_spot(parking: ParkingTable, spot: Spot,
         return true;
     }
 }
-
-
