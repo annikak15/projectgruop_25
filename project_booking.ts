@@ -18,6 +18,7 @@ const history_table = ud.create_history_table(10);
 
 /**
  * A person is a number that represents a person's ID 
+ * //Valid 
  * //invalid not unique nr, empty?? 
  */
 export type Person = number; 
@@ -318,7 +319,6 @@ export function park_at(park: ParkingTable, spot: number,
         parking.size = parking.size + 1;
         return true;
     }
-
     //Inserts a parson in the people array in the parking table 
     function insertFrom(i: number): boolean {
         const index = parking.probe(parking.keys.length, spot, i);
@@ -331,58 +331,45 @@ export function park_at(park: ParkingTable, spot: number,
             return false; 
         }
     }
-
-    if(parking.keys.length === parking.size) {
+    if(parking.keys.length === parking.size || parking.parked[spot] === person){ 
         return false; 
-    } else {
-        const reservations = parking.reserved[spot]; 
-        const reservation = find_person(reservations, person);
-
-        if (reservation === undefined) {
-            return false; 
-        } else if (is_within_date(reservation.dateStart, reservation.dateEnd)){
-
-            if (!is_empty_spot(parking, spot) && parking.parked[spot] !== person) {
-                const toBeFined = parking.parked[spot];
-                const finedReserv = find_person(reservations, toBeFined);
-                if(finedReserv === undefined) {
-                    return false;
-                } else {
-                    const fineHistory = find_history_fine(toBeFined, 
-                                                          history_table); 
-                    const record = create_history_record(
-                                        parking.name, 
-                                        spot.toString(), 
-                                        finedReserv.dateStart, 
-                                        finedReserv.dateEnd);
-
-                    if(fineHistory === undefined) {
-                        const newRecord = create_history_fine_record(record);
-                        add_fine_to_hf_table(create_fine_record(record), 
-                                             toBeFined, 
-                                             newRecord);
-                    } else {
-                        add_fine_to_hf_table(create_fine_record(record), 
-                                             toBeFined, 
-                                             fineHistory);
-                    }
-                    leave_spot(parking, spot, toBeFined);
-                    parking = get_park_from_parkingLots("saved_parking_lots.json", park.name)!
-                    const success = insertFrom(0);
-                    update_park("saved_parking_lots.json", parking); 
-                    return success
-                }
-            } else if(parking.parked[spot] === person) {
-                return false; 
-            } else {
-                insertFrom(0);
-                update_park("saved_parking_lots.json", parking); 
-                return true; 
-            }
+    } else {}
+    const reservations = parking.reserved[spot]; 
+    const reservation = find_person(reservations, person);
+    if (reservation === undefined || 
+        !is_within_date(reservation.dateStart, reservation.dateEnd)) {
+        return false; 
+    } else {}
+    if (!is_empty_spot(parking, spot) && parking.parked[spot] !== person) {
+        const toBeFined = parking.parked[spot];
+        const finedReserv = find_person(reservations, toBeFined);
+        if(finedReserv === undefined) {
+            return false;
+        } else {}
+        const fineHistory = find_history_fine(toBeFined, history_table); 
+        const record = create_history_record(parking.name, 
+                                             spot.toString(), 
+                                             finedReserv.dateStart, 
+                                             finedReserv.dateEnd);
+        if(fineHistory === undefined) {
+            const newRecord = create_history_fine_record(record);
+            add_fine_to_hf_table(create_fine_record(record), 
+                                 toBeFined, 
+                                 newRecord);
         } else {
-            return false; 
+            add_fine_to_hf_table(create_fine_record(record), 
+                                 toBeFined, 
+                                 fineHistory);
         }
-    }
+        leave_spot(parking, spot, toBeFined);
+        parking = get_park_from_parkingLots("saved_parking_lots.json", park.name)!
+        insertFrom(0);
+        update_park("saved_parking_lots.json", parking); 
+        return true;
+    } else {}
+    insertFrom(0);
+    update_park("saved_parking_lots.json", parking); 
+    return true; 
 }
 
 /**
