@@ -6,6 +6,11 @@ import { empty } from "./lib/prio_queue";
 
 import * as fs from 'fs';
 
+/**
+ * Makes an ParkingTable with empty parking spots and no reservations 
+ * @param length the number of parking spots in the parking lot 
+ * @returns Returns an empty ParkingTable 
+ */
 function make_parking_table(length: number, name: string): ParkingTable{
     const hash_func : HashFunction<number> = (key : number) => key;  
     const table: ParkingTable = { 
@@ -26,7 +31,7 @@ function make_parking_table(length: number, name: string): ParkingTable{
  * There is an additional test lot and an empty parking lot that is used 
  * for testing
  */
-function set_up():void {
+export function set_up():void {
     //All parkinglots you can reserv a parking spot in
     let Ångströmslaboratoriet = make_parking_table(9, "ångströmslaboratoriet"); 
     let Husargatan = make_parking_table(148, "husargatan");
