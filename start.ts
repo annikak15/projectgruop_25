@@ -1,5 +1,4 @@
 // Starts the app
-
 import * as ud from './user_data';
 import * as pb from './project_booking';
 import * as gq from './project_graph_queue';
@@ -10,12 +9,14 @@ import { ask_date, ask_park, parking, leave} from './booking_prompts';
 import { for_each } from '../../lib/list';
 
 const prompt: ps.Prompt = ps({ sigint: true });
+ // Files
+//ud.load_user_hashtable_from_file
+//ud.load_history_from_file
+const user_file = "./saved_user_data.json";
 
-//Change to saved user table
-const user_hashtable = ud.create_user_table(10);
+const user_hashtable: ud.user_table = ud.load_user_hashtable_from_file(user_file);
+const history_table = ud.load_history_from_file(ud.history_file);
 
-//Change to saved record table
-const history_table = ud.create_history_table(10);
 
 const app_name = "Parking Buddy";
 const logo = [
@@ -47,8 +48,11 @@ const logo = [
 let loggedin_user: ud.user_id_number;
 let current_user = 0;
 
+
+//GFunction ask_date showing prompts before called????
+
 function start() {
-    ud.load_user_hashtable_from_file(ud.saved_user_file);
+   // ud.load_user_hashtable_from_file(ud.saved_user_file);
     message_first_visit();
     login_or_signup();
 }
@@ -112,7 +116,9 @@ function homepage_options() {
     console.log('5. Log out');
     console.log("");
 
-    const choise = prompt("Enter 1, 2, 3, 4 or 5.");
+    console.log("Enter 1, 2, 3, 4 or 5.");
+    const choise = prompt("");
+
     if (choise === "1") {
         find_parking();
     } 
@@ -180,7 +186,8 @@ function display_fine(userFineHistory: ud.fine_record): void {
 // Find parking functions
 
 function find_parking() {
-    const answer_place = prompt('What is your location: 1 - Ångström, 2 - Centralen: ')
+    console.log('What is your location: 1 - Ångström, 2 - Centralen: ');
+    const answer_place = prompt("")
             
     if ( answer_place === '1') {
         console.log(gq.Find_Parking_lots(gq.graph_uppsala, 0));
@@ -198,7 +205,8 @@ function find_parking() {
 }
 
 function book_parking() {
-    const answer = prompt('Do you want to book parking? (yes/no):')
+    console.log('Do you want to book parking? (yes/no):')
+    const answer = prompt("")
 
     if(answer === 'yes'){
         const reservation = ask_date(loggedin_user);
