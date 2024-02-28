@@ -1,6 +1,6 @@
-import { type ProbingFunction, type HashFunction, probe_linear
-} from '../lib/hashtables'
-import { Prio_Queue, empty, is_empty, dequeue, qhead, display_queue } from './lib/prio_queue';
+import { type ProbingFunction, type HashFunction, probe_linear, ph_empty
+} from '../../lib/hashtables'
+import { Prio_Queue, empty, is_empty, dequeue, qhead, display_queue } from '../../lib/prio_queue';
 
 import { get_park_from_parkingLots, update_park } from './parking_lots';
 
@@ -13,7 +13,8 @@ import { add_fine_to_hf_table, create_fine_record, create_history_fine_record,
 
 import * as ud from './user_data';
 
-const history_table = ud.create_history_table(10);
+const history_table: ud.history_table = ph_empty(10, probe_linear(ud.hash_func));
+//const history_table = ud.create_history_table(10);
 
 
 /**

@@ -155,9 +155,8 @@ export type user_id_number = number;
 
 // Define your hash function
 export const hash_func: HashFunction<number> = (key: number) => key;
-
 // Use probe_linear with your hash function to create a probing function
-const probingFunction: ProbingFunction<number> = probe_linear(hash_func);
+export const probingFunction: ProbingFunction<number> = probe_linear(hash_func);
 
 /**
  * Creates an empty linear probing hashtable with a predefined size.
@@ -249,16 +248,22 @@ export function save_user_hash_to_file(file: string, hashtable: user_table): voi
  * @returns {ProbingHashtable} A probing hashtable that contains the user records.
  */
 export function load_user_hashtable_from_file(file: string): user_table {
-    // Read the serialized data from the file
-    const serialized_hashtable = fs.readFileSync(file, 'utf-8');
+    try{
+        // Read the serialized data from the file
+        const serialized_hashtable = fs.readFileSync(file, 'utf-8');
 
-    // Parse the serialized data
-    const hashtableWithoutProbe = JSON.parse(serialized_hashtable);
+        // Parse the serialized data
+        const hashtableWithoutProbe = JSON.parse(serialized_hashtable);
 
-    // Reattach the probe function
-    const hashtable: user_table = { ...hashtableWithoutProbe, probe: probe_linear(hash_func) };
-    
-    return hashtable;
+        // Reattach the probe function
+        const hashtable: user_table = { ...hashtableWithoutProbe, probe: probe_linear(hash_func) };
+        
+        return hashtable;
+    } catch (error) {
+        console.error('Error loading hashtable', error); 
+        const size = 10
+        return ph_empty(size, probe_linear(hash_func));
+    }
 }
 
 // Fine and parking history management
@@ -319,8 +324,7 @@ export function create_fine_record(record: history_record): fine_record {
  * @param fine The fine record (optional).
  * @returns The history fine record.
  */
-export function create_history_fine_record(area: string, spot: string, start: Date, end: Date): history_fine_record {
-    const history = create_history_record(area, spot, start, end);
+export function create_history_fine_record(history: history_record): history_fine_record {
     const fine = create_fine_record(history)
     
     const record: history_fine_record = {
@@ -433,7 +437,6 @@ export const history_file = 'saved_history.json'
  * @returns {void} 
  */
 export function save_history_to_file(file: string, hashtable: history_table ): void {
-    
     const serialized_hashtable = JSON.stringify(hashtable);
     fs.writeFileSync(file, serialized_hashtable);
 }
@@ -449,7 +452,9 @@ export function save_history_to_file(file: string, hashtable: history_table ): v
 export function load_history_from_file(file: string): history_table {
     try {
         const serialized_hashtable = fs.readFileSync(file, 'utf-8');
-        return JSON.parse(serialized_hashtable);
+        const hashtableWithoutProbe = JSON.parse(serialized_hashtable);
+        const hashtable: history_table = { ...hashtableWithoutProbe, probe: probe_linear(hash_func)};
+        return hashtable
     } catch (error) {
         console.error('Error loading hashtable', error); 
         const size = 10
