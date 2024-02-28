@@ -1,8 +1,8 @@
 import { type ProbingFunction, type HashFunction, probe_linear
 } from '../lib/hashtables'
-import { Prio_Queue, empty, is_empty, dequeue, qhead } from './lib/prio_queue';
+import { Prio_Queue, empty, is_empty, dequeue, qhead, display_queue } from './lib/prio_queue';
 
-import { update_park } from './parking_lots';
+import { get_park_from_parkingLots, update_park } from './parking_lots';
 
 import { start_timer } from './timer';
 
@@ -56,7 +56,7 @@ export type Reservations = Prio_Queue<Reservation>;
  * A hash table that resolves collisions by probing
  * @param keys the key array. null means that a key has been deleted.
  *      Represents the spots in the parking lot
- * @param people array of people that is currantly parked in a parking spot 
+ * @param parked array of people that is currantly parked in a parking spot 
  * @param reserved array of prio queues that stores reservations for each 
  *      parking spot 
  * @param probe the probing function
@@ -267,15 +267,13 @@ function probe_from<K, V, R>({keys, probe}: ParkingTable,
  */
 export function find_person(reservations: Reservations, 
                      person: Person): Reservation | undefined {
-    const reservs = reservations; 
-    while (!is_empty(reservs)) {
-        const reserv = qhead(reservs); 
-        if(reserv.person === person) {
-            return reserv; 
-        } else {
-            dequeue(reservs);
-        }
-    }
+    const reservs = reservations[2]; 
+    for(let i = 0; i < reservs.length; i++) {
+        const reserv = reservs[i][1]
+        if (reserv.person === person) { 
+            return reserv;
+        } 
+    } 
     return undefined; 
 }
 
@@ -310,8 +308,9 @@ export function is_within_date(dateS: Date, dateE: Date): boolean {
  * @modifies the parking table, adds the key (spot), to the array of keys.
  *      The key index in the array = spot. 
  */
-export function park_at(parking: ParkingTable, spot: number, 
+export function park_at(park: ParkingTable, spot: number, 
                         person: Person): boolean {
+    let parking = park; 
     //Helper function to insertFrom
     function insertAt(index: number): true {
         parking.keys[index] = spot;
@@ -333,19 +332,6 @@ export function park_at(parking: ParkingTable, spot: number,
         }
     }
 
-    //Finds parked user that is about to get a parking ticket
-    function find_user_to_be_fined(personID: Person): Reservation | undefined{
-        const reservs = parking.reserved[spot]
-        for(let i = 0; i < reservs.length; i++) {
-            const reserv = qhead(parking.reserved[spot]); 
-            dequeue(reservs);
-            if (reserv.person === person) { 
-                return reserv;
-            } 
-        } 
-        return undefined;
-    }
-
     if(parking.keys.length === parking.size) {
         return false; 
     } else {
@@ -358,7 +344,7 @@ export function park_at(parking: ParkingTable, spot: number,
 
             if (!is_empty_spot(parking, spot) && parking.parked[spot] !== person) {
                 const toBeFined = parking.parked[spot];
-                const finedReserv = find_user_to_be_fined(toBeFined);
+                const finedReserv = find_person(reservations, toBeFined);
                 if(finedReserv === undefined) {
                     return false;
                 } else {
@@ -381,9 +367,10 @@ export function park_at(parking: ParkingTable, spot: number,
                                              fineHistory);
                     }
                     leave_spot(parking, spot, toBeFined);
-                    insertFrom(0);
+                    parking = get_park_from_parkingLots("saved_parking_lots.json", park.name)!
+                    const success = insertFrom(0);
                     update_park("saved_parking_lots.json", parking); 
-                    return true; 
+                    return success
                 }
             } else if(parking.parked[spot] === person) {
                 return false; 
@@ -420,7 +407,8 @@ export function leave_spot(parking: ParkingTable, spot: Spot,
         parking.keys[index] = null; 
         parking.size = parking.size - 1;
         const reservs = parking.reserved[spot];
-        for(let i = 0; i < reservs.length; i++) {
+        const length = reservs.length;
+        for(let i = 0; i < length; i++) {
             const reserv = qhead(reservs); 
             dequeue(reservs);
             if (reserv.person === person) { 
