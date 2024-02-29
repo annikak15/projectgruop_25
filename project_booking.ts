@@ -1,4 +1,5 @@
-import { Prio_Queue, empty, is_empty, dequeue, qhead, display_queue } from './lib/prio_queue';
+import { Prio_Queue, empty, is_empty, dequeue, qhead, display_queue 
+} from './lib/prio_queue';
 
 import { get_park_from_parkingLots, update_park } from './parking_lots';
 
@@ -16,67 +17,108 @@ const history_table = ud.create_history_table(10);
 
 
 /**
- * A person is a number that represents a person's ID 
- * //Valid 
- * //invalid not unique nr, empty?? 
+ * A {Person} is a number that represents a person's ID number
+ * @invariant Person is a non-negative number 
+ * 
+ * Examples: 
+ * Valid: 
+ * 
+ * Borderline: 
+ * 
+ * Invalid: 
+ * not unique nr, empty?? 
  */
 export type Person = number; 
 
 /**
- * A spot represents a parking spot at a parking lot. 
+ * A {Spot} represents a parking spot at a parking lot. 
  * @invariant Spot is non-negative number 
- * //Invalid 
- * Empty? 
- * Must be 0<=spot<parking.size 
+ * 
+ * Examples: 
+ * Valid: 
+ * 
+ * Borderline: 
+ * 
+ * Invalid: 
+ * 
  */
 export type Spot = number;
 
 /**
- * A reservation is a record.
+ * A {Reservation} is a record.
  * It repressents a reservation of a parking spot at a specific time 
- * @template person a person represents a person's information 
- * @template dateStart represents the startign date of the reservation
- * @template dateEnd represents the end date of the reservation 
- * //Invalid 
+ * @param person a person represents a person's ID number 
+ * @param dateStart represents the startign date of the reservation
+ * @param dateEnd represents the end date of the reservation 
+ * @invariant dateStart must be at an earlier date than dateEnd 
+ * 
+ * Examples: 
+ * Valid: 
+ * 
+ * Borderline: 
  * dateStart must be at an earlier date than dateEnd 
+ * 
+ * Invalid: 
+ * 
  */
 export type Reservation = {person: Person, 
                     dateStart: Date,
                     dateEnd: Date};
 
 /**
- * Represents the reservations placed on a specific parking spot. 
+ * {Reservations} is a priority queue. 
+ * It represents the reservations placed on a specific parking spot. 
  * The reservations are placed in a priority queue, where the 
  * booking start date made into a number represents the priority of the booking.
  * Bookings with a lower number, a sooner date, gets higher priority. 
+ * @invariant The lower priority-number, the higher priority
+ * 
+ * Examples: 
+ * Valid: 
+ * 
+ * Borderline: 
+ * 
+ * Invalid: 
+ * 
  */
 export type Reservations = Prio_Queue<Reservation>;
 
 /**
- * A hash table that resolves collisions by probing
- * @param keys the key array. null means that a key has been deleted.
- *      Represents the spots in the parking lot
+ * A {ParkingTable} is a record that represents a parking lot. It stores 
+ * information about the names of the parking lot, if a parking spot is 
+ * occupied or not, who is occupying what spot and the reservations for every 
+ * spot. A specific index in an array corresponds to a specific parking spot, 
+ * so, for instance, parking spot nr 0's reservations are stored at 
+ * reserved[0], the person parking at spot 0 is stored at parked[0]
+ * and if the spot is occupied is stored at spots[0]
+ * @param spots the spot array. Represents the spots in the parking lot. null 
+ *      means that someone has left the spot. If e.g spot 0 is occupied then
+ *      spots[0] = 0, else spots[0] = null or spots[0] = undefined 
  * @param parked array of people that is currantly parked in a parking spot 
  * @param reserved array of prio queues that stores reservations for each 
  *      parking spot 
- * @param size the number of elements currently in the table
- * @invariant If keys[i] is neither null nor undefined, 
- *     then people[i] contains a person.
- * @invariant size is equal to the number of elements in keys 
- *     that are neither null nor undefined.
- * @invariant When the table is empty the reserved queue an array with empty 
- *      queues that is the size of the table. 
+ * @invariant If spots[i] is neither null nor undefined, 
+ *     then parked[i] contains a person.
+ * @invariant When the table is empty the reserved array is full of empty 
+ *      priority queues 
+ * 
+ * Examples: 
+ * Valid: 
+ * 
+ * Borderline: 
+ * 
+ * Invalid:
+ * 
  */
 export type ParkingTable = {
     readonly name: string
-    readonly keys:  Array<Spot | null | undefined >,
+    readonly spots:  Array<Spot | null | undefined>,
     readonly parked:  Array<Person>,
-    reserved: Array<Reservations>
-    size: number // number of elements
+    readonly reserved: Array<Reservations>
 };
 
 /**
- * Makes a reservation for a parking spot in a parking lot 
+ * Makes a reservation for a parking spot in a parking lot. 
  * @param dateStart The start date of the booking 
  * @param dateEnd The end date of the booking 
  * @param spot The empty spot that the user chose 
@@ -84,7 +126,8 @@ export type ParkingTable = {
  * @param person The person that wants to park 
  * @precondition The spot has no reservations that collide with the start or 
  *      end date 
- * @modifies The reservations queue that belongs to the spot in the ParkingTable 
+ * @modifies The reservations queue that belongs to the spot in the 
+ *      ParkingTable as well as the file "saved_parking_lots.ts"
  */
 export function make_booking (dateStart: Date, dateEnd: Date, spot: Spot, 
                               parking: ParkingTable, person: Person): void{
@@ -101,12 +144,13 @@ export function make_booking (dateStart: Date, dateEnd: Date, spot: Spot,
                                          spot.toString(), 
                                          dateStart, 
                                          dateEnd);
-    
 }
 
 /**
  * Turns a date into a 12 digit number, YYYYMMDDHHMM
- * @param date a date 
+ * @example
+ *      make_date_number(new Date(2024-02-29 18:39)); //returns 202402291839
+ * @param date A date in the format YYYY-MM-DD HH:MM
  * @returns returns a 12 digit number 
  */
 export function make_date_number(date: Date): number{
@@ -120,6 +164,9 @@ export function make_date_number(date: Date): number{
 
 /**
  * Adds an extra 15 minutes to a date 
+ * @example 
+ *      add_15_minutes(new Date(2024-02-29 18:00)); //returns 2024-02-29 18:15
+ *      add_15_minutes(new Date(2024-02-29 23:45)); //returns 2024-03-01 00:00
  * @param date the date you are adding 15 minutes to
  * @returns returns the date with 15 minutes added to it 
  */
@@ -133,7 +180,7 @@ function add_15_minutes(d: Date): Date{
 
 /**
  * Checks if a parking spot is reserved during the time a person want to 
- *      book a spot.
+ * book a spot.
  * @param dateS The wanted starting date of the booking 
  * @param dateE The end date of the booking 
  * @param spot The parking spot that is being checked if empty 
@@ -149,9 +196,9 @@ export function is_booked(dateS: Date, dateE: Date,
     if (is_empty(reservations)) {
         return false; 
     } else {
-        for(let i = 0; i < reservations.length; i++) {
-            const reservation = qhead(reservations); 
-            dequeue(reservations); 
+        const reservArr = reservations[2]
+        for(let i = 0; i < reservArr.length; i++) {
+            const reservation = reservArr[i][1]; 
             const reservStart = make_date_number(reservation.dateStart);
             //Adds 15 minutes to end time to ensure no overlapping 
             const reservEnd = make_date_number(
@@ -174,7 +221,7 @@ export function is_booked(dateS: Date, dateE: Date,
  * @param dateStart The start time of the users booking 
  * @param dateEnd The end time of the users booking 
  * @param parking The parking lot the user wants to park at 
- * @returns returns an array of spots for the user to choose from 
+ * @returns an array of spots for the user to choose from 
  */
 export function find_unbooked(dateStart: Date, dateEnd: Date, 
                               parking: ParkingTable): Array<Spot>{
@@ -195,9 +242,9 @@ export function find_unbooked(dateStart: Date, dateEnd: Date,
  * @returns Returns true if the spot is empty and false if not 
  */
 export function is_empty_spot(parking: ParkingTable, spot: number): boolean {
-    return parking.keys[spot] === undefined 
+    return parking.spots[spot] === undefined 
             ? true
-            : parking.keys[spot] === null
+            : parking.spots[spot] === null
             ? true
             : false;  
 }
@@ -284,10 +331,11 @@ export function is_within_date(dateS: Date, dateE: Date): boolean {
  * @param parking The parking table that the user wants to park at 
  * @param spot The parking spot that the user wants to park
  * @param person The user's ID
- * @returns returns true if the person got put into the parked array. If the 
- *      user didn't book that specific spot, if the parking table has no empty 
- *      spots the function returns false, or if the person is trying to park at 
- *      a time that is not within their booked time. 
+ * @returns Returns false if: 
+ *      - The same person tries to park twice in the same spot 
+ *      - The person doesn't have a reservation for the spot or if today's
+ *        date is not within the reservation's start and end date 
+ *      Otherwise the function returns true
  * @modifies the parking table, adds the key (spot), to the array of keys.
  *      The key index in the array = spot. 
  */
@@ -296,27 +344,33 @@ export function park_at(park: ParkingTable, spot: number,
     let parking = park; 
     //Inserts a person in the people array in the parking table 
     function insertAt(index: number): true {
-        parking.keys[index] = spot;
+        parking.spots[index] = spot;
         parking.parked[index] = person;
-        parking.size = parking.size + 1;
         return true;
     }
     
-    if(parking.keys.length === parking.size || parking.parked[spot] === person){ 
+    if(parking.parked[spot] === person){ 
         return false; 
     } else {}
+
     const reservations = parking.reserved[spot]; 
     const reservation = find_person(reservations, person);
+
+    //Checks if the person has made a reservation for this spot 
     if (reservation === undefined || 
         !is_within_date(reservation.dateStart, reservation.dateEnd)) {
         return false; 
     } else {}
-    if (!is_empty_spot(parking, spot) && parking.parked[spot] !== person) {
+
+    //Checks if someone is still standing in the spot, gives them a fine 
+    if (!is_empty_spot(parking, spot)) {
         const toBeFined = parking.parked[spot];
         const finedReserv = find_person(reservations, toBeFined);
+
         if(finedReserv === undefined) {
             return false;
         } else {}
+
         const fineHistory = find_history_fine(toBeFined, history_table); 
         const record = create_history_record(parking.name, 
                                              spot.toString(), 
@@ -335,11 +389,13 @@ export function park_at(park: ParkingTable, spot: number,
                                  toBeFined, 
                                  fineHistory);
         }
+
         leave_spot(parking, spot, toBeFined);
         parking = get_park_from_parkingLots("saved_parking_lots.json", park.name)!
         insertAt(spot);
         update_park("saved_parking_lots.json", parking); 
         return true;
+
     } else {}
     insertAt(spot);
     update_park("saved_parking_lots.json", parking); 
@@ -353,6 +409,8 @@ export function park_at(park: ParkingTable, spot: number,
  * @param parking the parking lot 
  * @param spot the parking spot the user is leaving 
  * @param person the user's ID 
+ * @precondition the person must have a reservation in the reservations queue
+ *      at parking.reserved[spot]
  * @returns returns true if the person is found at the parking lot at the given 
  *      spot, returns false otherwise. 
  * @modifies the parking table, removes the person from the reservations queue 
@@ -364,15 +422,14 @@ export function leave_spot(parking: ParkingTable, spot: Spot,
     if (parking.parked[spot] !== person) {
         return false;
      } else { 
-        parking.keys[spot] = null; 
-        parking.size = parking.size - 1;
+        parking.spots[spot] = null; 
         const reservs = parking.reserved[spot];
         const length = reservs.length;
+
         for(let i = 0; i < length; i++) {
             const reserv = qhead(reservs); 
             dequeue(reservs);
             if (reserv.person === person) { 
-                parking.reserved[spot] = reservs;
                 break; 
             } 
         }
