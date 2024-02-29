@@ -9,13 +9,12 @@ import * as fs from 'fs';
  * @param length the number of parking spots in the parking lot 
  * @returns Returns an empty ParkingTable 
  */
-function make_parking_table(length: number, name: string): ParkingTable{ 
+export function make_parking_table(length: number, name: string): ParkingTable{ 
     const table: ParkingTable = { 
         name: name,
-        keys: new Array(length), 
+        spots: new Array(length), 
         parked: new Array(length), 
-        reserved: new Array(length), 
-        size: 0 };
+        reserved: new Array(length)};
     for(let i = 0; i < table.reserved.length; i++) {
         table.reserved[i] = empty(); 
     }
@@ -25,15 +24,16 @@ function make_parking_table(length: number, name: string): ParkingTable{
 /**
  * set_up is used to reset the system compleatly, emptying all parking lots.
  * There is an additional test lot and an empty parking lot that is used 
- * for testing
+ * for testing that will not be available for the users 
  */
-export function set_up():void {
+export function set_up(): void {
     //All parkinglots you can reserv a parking spot in
-    let Ångströmslaboratoriet = make_parking_table(9, "ångströmslaboratoriet"); 
+    let Ångströmslaboratoriet = make_parking_table(9, "angstromslaboratoriet"); 
     let Husargatan = make_parking_table(148, "husargatan");
     let StudenternasIP = make_parking_table(110, "studenternas"); 
     let Grimhild = make_parking_table(400, "grimhild"); 
     let Centralgaraget = make_parking_table(350, "centralgaraget"); 
+    //Parkingspot users can not park at 
     let testLot = make_parking_table(3, "test"); //Test lot 
     let emptyLot = make_parking_table(0, "empty"); //Empty parking lot
 
@@ -55,7 +55,8 @@ export function set_up():void {
  * @param file the name of the file
  * @param parks The array of all parking lots in the bookingsystem 
  */
-export function save_parking_to_file(file: string, parks: Array<ParkingTable>): void{
+export function save_parking_to_file(file: string, 
+                                     parks: Array<ParkingTable>): void{
     const serialized_parks = JSON.stringify(parks); 
     fs.writeFileSync(file, serialized_parks); 
 }
@@ -66,7 +67,8 @@ export function save_parking_to_file(file: string, parks: Array<ParkingTable>): 
  * @param file the name of the file you want to retrieve data from 
  * @returns returns an array of parkingTables or undefined if an error occured 
  */
-export function load_parks_from_file(file: string): Array<ParkingTable> | undefined{
+export function load_parks_from_file(
+                                file: string): Array<ParkingTable> | undefined{
     try {
         const serialized_park = fs.readFileSync(file, 'utf-8');
         return JSON.parse(serialized_park);
@@ -80,7 +82,7 @@ export function load_parks_from_file(file: string): Array<ParkingTable> | undefi
  * Updates the parkingTable array that is saved in the JSON file 
  * @param file the file name 
  * @param park The parkingtable you are updating 
- * @modifies the parks array with all parkinglots 
+ * @modifies the parks array with all parkinglots as well as a file 
  */
 export function update_park(file: string, park: ParkingTable): void{
     let parks = load_parks_from_file(file); 
@@ -102,7 +104,8 @@ export function update_park(file: string, park: ParkingTable): void{
  * @returns returns the parkingTable if it is found in the array, else it 
  *      returns undefined 
  */
-export function get_park_from_parkingLots(file: string, parkLot: string): ParkingTable | undefined {
+export function get_park_from_parkingLots(
+                    file: string, parkLot: string): ParkingTable | undefined {
     const parks = load_parks_from_file(file); 
     if (parks !== undefined) {
         for(let i = 0; i < parks.length; i++) {
@@ -115,12 +118,3 @@ export function get_park_from_parkingLots(file: string, parkLot: string): Parkin
         return undefined; 
     }
 }
-
-
-//set_up(); //Sparar alla (tomma) parkeringar till filen 
-
-//console.log(load_parks_from_file("saved_parking_lots.json")); //Skriver ut alla sparade parkeringar i array 
-
-//console.log(get_park_from_parkingLots("saved_parking_lots.json", "ångströmslaboratoriet")); //Skriver ut parkeringen från ångström 
-
-//console.log(update_park("saved_parking_lots.json", Ångströmslaboratoriet)); //Skriver int ut något, men ändrar i JSON filen 
