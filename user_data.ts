@@ -294,7 +294,7 @@ export type history_fine_record = {
  * @param end The end time of parking.
  * @returns The history record.
  */
-export function create_history_record(area: string, spot: string, start: Date, end: Date): history_record {
+export function create_history_record(area: string, spot: string, start: Date | string, end: Date | string): history_record {
     const record = {
         area: area,
         spot: spot,
@@ -312,7 +312,7 @@ export function create_history_record(area: string, spot: string, start: Date, e
 export function create_fine_record(record: history_record): fine_record {
     const result = {
         info: record,
-        cost: "You have a 500kr fine from parking at ${record.area}."
+        cost: `You have a 500kr fine from parking at ${record.area}.`
     }
     return result;
 }
@@ -354,11 +354,11 @@ export function add_history_to_hf_record(history: history_record, hf_record: his
  * @param hf_record The existing history fine record.
  * @returns The updated history fine record.
  */
-export function add_fine_to_hf_table(fine: fine_record, user: user_id_number, hf_record: history_fine_record) {
+export function add_fine_to_hf_record(fine: fine_record, user: user_id_number, hf_record: history_fine_record) {
     if (hf_record.fine === undefined) {
-        return hf_record.fine = list(fine);
+        hf_record.fine = list(fine);
     } else {
-        return hf_record.fine = append(hf_record.fine, list(fine));
+        hf_record.fine = append(hf_record.fine, list(fine));
     }
 }
 
@@ -428,7 +428,7 @@ export function is_parking_over(parking_table: ParkingTable, user_id: user_id_nu
     return is_empty_spot(parking_table, spot) ? false : true
 }
 
-export const history_file = 'saved_history.json'
+export const history_file = './saved_history_data.json'
  
 /**
  * Serializes a hashingtable into string and saves it to an additional file.

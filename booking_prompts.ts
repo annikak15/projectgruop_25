@@ -76,6 +76,7 @@ export function ask_park(dateS: Date, dateE: Date, person: number): void {
         console.log("press q to quit");
         console.log("Where do you want to park?");
         userInput = prompt("").toLocaleLowerCase();
+        console.log("");
         if (userInput === "q") {
             homepage_options();
         } else {
@@ -98,6 +99,7 @@ export function ask_park(dateS: Date, dateE: Date, person: number): void {
                     let validAnswer = false; 
                     //Kollar så att man väljer en ledig plats på parkeringen
                     while(!validAnswer) {
+                        console.log("");
                         console.log("Choose one of these spots:");
                         console.log(unbooked.toString());
                         spot = Number(prompt("")); 
@@ -181,7 +183,7 @@ export function leave(personID: number): void {
                     console.log("You have ended your parking");
                     press_homepage();
                 } else {
-                    console.log("Invalid spot");
+                    console.log("Invalid spot or you have no parking at this spot.");
                     continue;
                 }
             }

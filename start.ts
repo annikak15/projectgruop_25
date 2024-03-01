@@ -13,9 +13,10 @@ const prompt: ps.Prompt = ps({ sigint: true });
 //ud.load_user_hashtable_from_file
 //ud.load_history_from_file
 const user_file = "./saved_user_data.json";
+const history_file = "./saved_history_data.json"
 
 const user_hashtable: ud.user_table = ud.load_user_hashtable_from_file(user_file);
-const history_table = ud.load_history_from_file(ud.history_file);
+const user_table: ud.history_table = ud.load_history_from_file(history_file);
 
 
 const app_name = [
@@ -58,10 +59,9 @@ let loggedin_user: ud.user_id_number;
 let current_user = 0;
 
 
-//GFunction ask_date showing prompts before called????
+//Function ask_date showing prompts before called????
 
 function start() {
-   // ud.load_user_hashtable_from_file(ud.saved_user_file);
     message_first_visit();
     login_or_signup();
 }
@@ -74,7 +74,7 @@ function message_first_visit(): void {
 }
 
 function login_or_signup() {
-    console.log("Log in och create account to acces Parking Buddy's services.");
+    console.log("Log in or create account to acces Parking Buddy's services.");
     console.log("");
     console.log("1: Log in");
     console.log("2: Create account");
@@ -94,7 +94,9 @@ function login_or_signup() {
 
 function create_account() {
     console.log("");
+    console.log(user_hashtable);
     const created_user = ud.create_and_add_user_to_table(user_hashtable);
+    console.log(user_hashtable);
     const welcome = `Welcome ${created_user.name1} ${created_user.name2}.`;
     loggedin_user = created_user.id;
     console.log(welcome);
@@ -150,7 +152,7 @@ export function homepage_options() {
     }
     else if (choise === "3"){
         console.log("");
-        display_history_fine(history_table);   
+        display_history_fine(ud.load_history_from_file(history_file));   
     } 
     else if ( choise === '4') {
         console.log("");
@@ -226,7 +228,8 @@ function display_fine(userFineHistory: ud.fine_record): void {
 
 function find_parking() {
     console.log('What is your location: 1 - Ångström, 2 - Centralen: ');
-    const answer_place = prompt("")
+    const answer_place = prompt("");
+    console.log("");
             
     if ( answer_place === '1') {
         console.log(gq.Find_Parking_lots(gq.graph_uppsala, 0));
@@ -246,6 +249,7 @@ function find_parking() {
 function book_parking() {
     console.log('Do you want to book parking? (yes/no):')
     const answer = prompt("")
+    console.log("");
 
     if(answer === 'yes'){
         const reservation = ask_date(loggedin_user);
@@ -288,7 +292,7 @@ function exit_app() {
     console.log("");
     console.log("Closing Parking Buddy.");
     ud.save_user_hash_to_file(user_file, user_hashtable);
-    ud.save_history_to_file(ud.history_file, history_table);
+    ud.save_history_to_file(ud.history_file, ud.load_history_from_file(history_file));
     process.exit();
 }
 

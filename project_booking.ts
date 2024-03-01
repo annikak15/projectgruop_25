@@ -3,17 +3,23 @@ import { type ProbingFunction, type HashFunction, probe_linear, ph_empty
 import { Prio_Queue, empty, is_empty, dequeue, qhead, display_queue } from '../../lib/prio_queue';
 
 import { get_park_from_parkingLots, update_park } from './parking_lots';
-
 import { start_timer } from './timer';
 
-import { add_fine_to_hf_table, create_fine_record, create_history_fine_record, 
+import { add_fine_to_hf_record, create_fine_record, create_history_fine_record, 
         create_history_record, find_history_fine, find_user_record, 
-        get_user_fine_history, get_user_history//, history_table 
+        get_user_fine_history, get_user_history, add_history_to_hf_record,
+        load_history_from_file, save_history_to_file, add_to_history_hashtable,
+        create_history_table, get_user_id
 } from './user_data';
 
-import * as ud from './user_data';
 
-const history_table: ud.history_table = ph_empty(10, probe_linear(ud.hash_func));
+//import * as ud from './user_data';
+
+
+
+const history_file = "./saved_history_data.json"
+
+
 //const history_table = ud.create_history_table(10);
 
 
@@ -340,7 +346,7 @@ export function park_at(park: ParkingTable, spot: number,
         const reservation = find_person(reservations, person);
 
         if (reservation === undefined) {
-            return false; 
+            return false;
         } else if (is_within_date(reservation.dateStart, reservation.dateEnd)){
 
             if (!is_empty_spot(parking, spot) && parking.parked[spot] !== person) {
@@ -350,7 +356,7 @@ export function park_at(park: ParkingTable, spot: number,
                     return false;
                 } else {
                     const fineHistory = find_history_fine(toBeFined, 
-                                                          history_table); 
+                        load_history_from_file(history_file)); 
                     const record = create_history_record(
                                         parking.name, 
                                         spot.toString(), 
@@ -359,18 +365,23 @@ export function park_at(park: ParkingTable, spot: number,
 
                     if(fineHistory === undefined) {
                         const newRecord = create_history_fine_record(record);
-                        add_fine_to_hf_table(create_fine_record(record), 
+                        const f_record = add_fine_to_hf_record(create_fine_record(record), 
                                              toBeFined, 
                                              newRecord);
+                        const hf_record = find_history_fine(toBeFined, load_history_from_file(history_file));
+                        add_to_history_hashtable(hf_record!, toBeFined, load_history_from_file(history_file));
                     } else {
-                        add_fine_to_hf_table(create_fine_record(record), 
+                        const f_record = add_fine_to_hf_record(create_fine_record(record), 
                                              toBeFined, 
                                              fineHistory);
+                        const hf_record = find_history_fine(toBeFined, load_history_from_file(history_file));
+                        add_to_history_hashtable(hf_record!, toBeFined, load_history_from_file(history_file));
                     }
                     leave_spot(parking, spot, toBeFined);
                     parking = get_park_from_parkingLots("saved_parking_lots.json", park.name)!
                     const success = insertFrom(0);
                     update_park("saved_parking_lots.json", parking); 
+                    save_history_to_file(history_file, load_history_from_file(history_file));
                     return success
                 }
             } else if(parking.parked[spot] === person) {
@@ -378,6 +389,25 @@ export function park_at(park: ParkingTable, spot: number,
             } else {
                 insertFrom(0);
                 update_park("saved_parking_lots.json", parking); 
+                const history = create_history_record(parking.name, spot.toString(), reservation.dateStart, reservation.dateEnd);
+                console.log("History", history);
+                const table = load_history_from_file(history_file);
+                const hf_record = find_history_fine(person, table);
+                console.log("hf record", history);
+                if (hf_record === undefined) {
+                    const new_hf = create_history_fine_record(history);
+                    console.log("new hf", (new_hf));
+                    
+                    console.log("historyfile no add", table);
+                    add_to_history_hashtable(new_hf, person, table);
+                    console.log("historyfile added", table);
+                } else {
+                    console.log("historyfile no add", table);
+                    add_history_to_hf_record(history, hf_record);
+                    console.log("historyfile added", table);
+
+                }
+                save_history_to_file(history_file, table);
                 return true; 
             }
         } else {
