@@ -1,20 +1,10 @@
-
 import {
     type List, list, for_each, filter, pair, head, tail, list_ref, reverse, append, map, length, is_null
 } from '../../lib/list';
 import {
-    type Queue, is_empty, head as qhead, 
-} from '../../lib/queue_array';
-import {
     type ListGraph, build_array
 } from '../../lib/graphs';
-
-import { Prio_Queue, empty, enqueue, dequeue
-
-} from '../../lib/prio_queue'
-
 import * as PromptSync from "prompt-sync";
-
 const prompt: PromptSync.Prompt = PromptSync({ sigint: true });
 
 

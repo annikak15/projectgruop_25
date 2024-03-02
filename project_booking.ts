@@ -1,18 +1,11 @@
-import { type ProbingFunction, type HashFunction, probe_linear, ph_empty
-} from '../../lib/hashtables'
-import { Prio_Queue, empty, is_empty, dequeue, qhead, display_queue } from '../../lib/prio_queue';
-
+import { Prio_Queue, empty, is_empty, dequeue, qhead } from './lib/prio_queue';
 import { get_park_from_parkingLots, update_park } from './parking_lots';
-import { start_timer } from './timer';
-
 import { add_fine_to_hf_record, create_fine_record, create_history_fine_record, 
         create_history_record, find_history_fine, add_history_to_hf_record,
         load_history_from_file, save_history_to_file, add_to_history_hashtable, 
 } from './user_data';
 
 const history_file = "./saved_history_data.json"
-//const history_table = load_history_from_file("./saved_history_data.json");
-
 
 /**
  * A {Person} is a number that represents a person's ID number

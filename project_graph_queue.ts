@@ -1,15 +1,10 @@
-
 import {
     type List, list, for_each, filter, pair, tail, list_ref, reverse, append, map, length, is_null
 } from '../../lib/list';
-
 import {
     type ListGraph, build_array
 } from '../../lib/graphs';
-
-import { Prio_Queue, empty, dequeue, qhead, is_empty, display_queue, swap
-
-} from '../../lib/prio_queue'
+import { Prio_Queue, empty, dequeue, qhead, is_empty, display_queue, swap } from './lib/prio_queue'
 
 
 /**
