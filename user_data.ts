@@ -1,10 +1,7 @@
 import {
     type ProbingHashtable, probe_linear, ph_empty, type HashFunction, ph_insert,
     ph_lookup, type ProbingFunction, probe_from
-} from '../../lib/hashtables'
-import {
-    leave_spot, type ParkingTable, type Reservation, is_empty_spot
-} from'./project_booking'
+} from './lib/hashtables'
 import {
     type List, list, pair, type Pair, append
 } from '../../lib/list';
