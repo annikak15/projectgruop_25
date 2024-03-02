@@ -191,7 +191,7 @@ function display_history_fine(table: ud.history_table) {
     if (record) {
         // Retrieve parking history and fine history from the history-fine record
         const userHistory = ud.get_user_history(record);
-        const userFineHistory = ud.get_user_fine_history(record);
+        const userFineHistory = ud.get_user_fine(record);
 
         // Display parking history
         console.log("Parking History:");

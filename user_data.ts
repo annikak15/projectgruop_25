@@ -9,9 +9,8 @@ import {
     type List, list, pair, type Pair, append
 } from '../../lib/list';
 import * as fs from 'fs';
-import * as ps from "prompt-sync";
-
-const prompt: ps.Prompt = ps({ sigint: true });
+const ps = require("prompt-sync");
+const prompt = ps({ sigint: true });
 
 
 //Create user and user handling
@@ -168,10 +167,10 @@ export function get_user_info(): string {
  * @param {string} email The email address to validate.
  * @returns {boolean} True if the email address is valid, false otherwise.
  */
-function isValidEmail(email: string): boolean {
-    // Regular expression to validate email address
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+export function isValidEmail(email: string): boolean {
+    // Regular expressions to validate email address
+    const email_check = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return email_check.test(email);
 }
 
 /**
@@ -179,10 +178,10 @@ function isValidEmail(email: string): boolean {
  * @param {string} reg_plate the registration plate to validate
  * @returns {boolean} true if the reg plate is valid, false otherwise
  */
-function isValidRegistrationPlate(reg_plate: string): boolean {
+export function isValidRegistrationPlate(reg_plate: string): boolean {
     // Regular expression to validate registration plate format
-    const regPlateRegex = /^[a-zA-Z]{3}\d{3}$/;
-    return regPlateRegex.test(reg_plate);
+    const reg_check = /^[a-zA-Z]{3}\d{3}$/;
+    return reg_check.test(reg_plate);
 }
 
 /**
@@ -246,11 +245,12 @@ export const probingFunction: ProbingFunction<user_id_number> = probe_linear(has
 /**
  * Creates an empty linear probing hashtable with a predefined size.
  * @param {number} hashtable_size the size of the hashtable.
- * @returns {user_table} The empty hashtable to store user records.
+ * @precondition hashtable_size is a positive number.
+ * @returns {user_record} The empty hashtable to store user records.
  */
 export function create_user_table(hashtable_size: number):
-                                 ProbingHashtable<user_id_number, user_table> {
-    const hashtable: ProbingHashtable<user_id_number, user_table> = ph_empty(hashtable_size,
+                                 ProbingHashtable<user_id_number, user_record> {
+    const hashtable: ProbingHashtable<user_id_number, user_record> = ph_empty(hashtable_size,
                                                                     probingFunction);
     return hashtable;
 }
@@ -258,7 +258,6 @@ export function create_user_table(hashtable_size: number):
 /**
  * Finds the id in a user_record.
  * @param {user_record} user The user to to get ID of.
- * @precondition user_record is not empty.
  * @returns {user_id_number} The id of the user.
  */
 export function get_user_id(user: user_record): user_id_number {
@@ -268,15 +267,15 @@ export function get_user_id(user: user_record): user_id_number {
 
 /**
  * Adds a user to the user hashtable.
- * @param {user_record} user A user_record to be added to the hashtable.
+ * @param {user_record} record A user_record to be added to the hashtable.
  * @param {user_id_number} user_id The id of the person_record
  * @param {user_table} hashtable The hashtable to store user.
  * @returns {user_table} The updated user hashtable.
  */
-export function add_user_to_hashtable(user: user_record, 
+export function add_user_to_hashtable(record: user_record, 
                                 user_id: user_id_number, 
                                 hashtable: user_table): user_table {
-    const insert_user = ph_insert(hashtable, user_id, user);
+    const insert_user = ph_insert(hashtable, user_id, record);
     return hashtable;
 }
 
@@ -352,8 +351,7 @@ export function load_user_hashtable_from_file(file: string): user_table {
         return hashtable;
     } catch (error) {
         console.error('Error loading hashtable', error); 
-        const size = 10
-        return ph_empty(size, probe_linear(hash_func));
+        return create_user_table(100);
     }
 }
 
@@ -418,7 +416,7 @@ export type history_record = {
  * {
  *   info: {
  *     area: "studenternas",
- *     spot: "1",
+ *     spot: "1000",
  *     start: "2023-05-12T08:30:00.000Z",
  *     end: "2024-04-23T08:20:00.000Z"
  *   },
@@ -561,7 +559,7 @@ export function create_history_record(area: string,
         spot: spot,
         start: start,
         end: end 
-    }
+    };
     return record;
 }
 
@@ -574,7 +572,7 @@ export function create_fine_record(record: history_record): fine_record {
     const result = {
         info: record,
         cost: `You have a 500kr fine from parking at ${record.area}.`
-    }
+    };
     return result;
 }
 
@@ -584,11 +582,12 @@ export function create_fine_record(record: history_record): fine_record {
  * @returns {history_fine_record} The history fine record.
  */
 export function create_history_fine_record(history: history_record): history_fine_record {
-    const fine = create_fine_record(history)
+    //const fine = create_fine_record(history)
     const record: history_fine_record = {
         history: list(history),
-        fine: fine ? list(fine) : undefined
-    } 
+        fine: undefined
+        //fine: fine ? list(fine) : undefined
+    };
     return record;
 }
 
@@ -611,16 +610,23 @@ export function add_history_to_hf_record(history: history_record,
  * Adds a fine record to a history fine record.
  * @param {fine_record} fine The fine record to be added.
  * @param {user_id_number} user The user to recieve the fine.
- * @param {history_fine_record} hf_record The existing history fine record.
+ * @param {history_table} table The table to find history-fine records.
  * @returns {void} Modifies the history table.
  */
 export function add_fine_to_hf_record(fine: fine_record,
-                                    user: user_id_number, 
-                                    hf_record: history_fine_record): void {
-    if (hf_record.fine === undefined) {
-        hf_record.fine = list(fine);
+                                    user: user_id_number,
+                                    table: history_table): void {
+    const record = find_history_fine(user, table);
+    if (record === undefined) {
+        console.log("No parking history associated to user.");
+        console.log("Could not send fine.");
     } else {
-        hf_record.fine = append(hf_record.fine, list(fine));
+        if (record.fine === undefined) {
+            record.fine = list(fine);
+        } else {
+            record.fine = append(record.fine, list(fine));
+        }
+        console.log("Fine sent to user.");
     }
 }
 
@@ -642,8 +648,8 @@ export function create_history_table(hashtable_size: number): history_table {
  * @returns {history_table} The updated history table.
  */
 export function add_to_history_hashtable(record: history_fine_record, 
-    user_id: user_id_number, 
-    hashtable: history_table): history_table {
+                                        user_id: user_id_number, 
+                                        hashtable: history_table): history_table {
     const insert = ph_insert(hashtable, user_id, record);
     return hashtable;
 }
@@ -680,23 +686,10 @@ export function get_user_history(record: history_fine_record):
  * @returns {List<fine_record> | undefined} a list of fine_records or
  * undefined if not found.
  */
-export function get_user_fine_history(record: history_fine_record): 
+export function get_user_fine(record: history_fine_record): 
                                     List<fine_record> | undefined {
     const fine = record.fine;
     return fine;
-}
-
-/**
- * Checks if parking time is over for a user at a specific spot.
- * @param parking_table The parking table.
- * @param user_id The user ID.
- * @param spot The parking spot.
- * @returns {boolean} True if parking time is over, false otherwise.
- */
-export function is_parking_over(parking_table: ParkingTable,
-                                user_id: user_id_number, 
-                                spot: number): boolean {
-    return is_empty_spot(parking_table, spot) ? false : true
 }
 
 /**
@@ -711,7 +704,6 @@ export const history_file = './saved_history_data.json'
  * @param {user_table} hashtable The hashtable containing user data.
  * @returns {void} 
  */
-
 export function save_history_to_file(file: string, hashtable: history_table ): void {
     const serialized_hashtable = JSON.stringify(hashtable);
     fs.writeFileSync(file, serialized_hashtable);
@@ -726,17 +718,15 @@ export function save_history_to_file(file: string, hashtable: history_table ): v
  * @precondition The hashtable must need a probing hashing function.
  * @returns {history_table} The history hashtable that contains the user records.
  */
-
 export function load_history_from_file(file: string): history_table {
     try {
         const serialized_hashtable = fs.readFileSync(file, 'utf-8');
         const hashtableWithoutProbe = JSON.parse(serialized_hashtable);
         const hashtable: history_table = { ...hashtableWithoutProbe,
                                          probe: probe_linear(hash_func)};
-        return hashtable
+        return hashtable;
     } catch (error) {
         console.error('Error loading hashtable', error); 
-        const size = 10
-        return ph_empty(size, probe_linear(hash_func));
+        return create_history_table(100);
     }
 }

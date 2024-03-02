@@ -6,21 +6,12 @@ import { get_park_from_parkingLots, update_park } from './parking_lots';
 import { start_timer } from './timer';
 
 import { add_fine_to_hf_record, create_fine_record, create_history_fine_record, 
-        create_history_record, find_history_fine, find_user_record, 
-        get_user_fine_history, get_user_history, add_history_to_hf_record,
-        load_history_from_file, save_history_to_file, add_to_history_hashtable,
-        create_history_table, get_user_id
+        create_history_record, find_history_fine, add_history_to_hf_record,
+        load_history_from_file, save_history_to_file, add_to_history_hashtable, 
 } from './user_data';
 
-
-//import * as ud from './user_data';
-
-
-
 const history_file = "./saved_history_data.json"
-
-
-//const history_table = ud.create_history_table(10);
+//const history_table = load_history_from_file("./saved_history_data.json");
 
 
 /**
@@ -367,13 +358,13 @@ export function park_at(park: ParkingTable, spot: number,
                         const newRecord = create_history_fine_record(record);
                         const f_record = add_fine_to_hf_record(create_fine_record(record), 
                                              toBeFined, 
-                                             newRecord);
+                                             load_history_from_file("./saved_history_data.json"));
                         const hf_record = find_history_fine(toBeFined, load_history_from_file(history_file));
                         add_to_history_hashtable(hf_record!, toBeFined, load_history_from_file(history_file));
                     } else {
                         const f_record = add_fine_to_hf_record(create_fine_record(record), 
                                              toBeFined, 
-                                             fineHistory);
+                                             load_history_from_file("./saved_history_data.json"));
                         const hf_record = find_history_fine(toBeFined, load_history_from_file(history_file));
                         add_to_history_hashtable(hf_record!, toBeFined, load_history_from_file(history_file));
                     }
