@@ -13,12 +13,22 @@ const prompt: ps.Prompt = ps({ sigint: true });
 //ud.load_user_hashtable_from_file
 //ud.load_history_from_file
 const user_file = "./saved_user_data.json";
+const history_file = "./saved_history_data.json"
 
 const user_hashtable: ud.user_table = ud.load_user_hashtable_from_file(user_file);
-const history_table = ud.load_history_from_file(ud.history_file);
+const user_table: ud.history_table = ud.load_history_from_file(history_file);
 
 
-const app_name = "Parking Buddy";
+const app_name = [
+   " ____   ____  ____   __  _  ____  ____    ____      ____   __ __  ___    ___    __ __  ",
+   " |    \ /    ||    \ |  |/ ]|    ||    \  /    |    |    \ |  |  ||   \  |   \  |  |  |",
+   " |  o  )  o  ||  D  )|  ' /  |  | |  _  ||   __|    |  o  )|  |  ||    \ |    \ |  |  |",
+   " |   _/|     ||    / |    \  |  | |  |  ||  |  |    |     ||  |  ||  D  ||  D  ||  ~  |",
+   " |  |  |  _  ||    \ |     | |  | |  |  ||  |_ |    |  O  ||  :  ||     ||     ||___, |",
+   " |  |  |  |  ||  .  \|  .  | |  | |  |  ||     |    |     ||     ||     ||     ||     |",
+   " |__|  |__|__||__|\_||__|\_||____||__|__||___,_|    |_____| \__,_||_____||_____||____/ ",
+   "                                                                                       "
+];
 const logo = [
     "................................................................................",
     "......................................,I7777777777777=................7.........",
@@ -46,30 +56,36 @@ const logo = [
 ];
 
 let loggedin_user: ud.user_id_number;
-let current_user = 
+let current_user = 0;
 
-//GFunction ask_date showing prompts before called????
+
+//Function ask_date showing prompts before called????
 
 function start() {
-   // ud.load_user_hashtable_from_file(ud.saved_user_file);
     message_first_visit();
     login_or_signup();
 }
 
 function message_first_visit(): void {
+    app_name.forEach(line => console.log(line));
     logo.forEach(line => console.log(line.replace(/\./g, ' ')));
-    console.log(app_name);
+    console.log("");
+    console.log("");
 }
 
 function login_or_signup() {
-    console.log("1: Log in")
-    console.log("2: Create account")
+    console.log("Log in or create account to acces Parking Buddy's services.");
+    console.log("");
+    console.log("1: Log in");
+    console.log("2: Create account");
     const choises = prompt("");
     if (choises === "1") {
+        console.log("");
         login(user_hashtable);
     } else if (choises === "2") {
        create_account();
     } else {
+        console.log("");
         console.log("Invalid input. Try again.")
         login_or_signup();
     }
@@ -77,15 +93,20 @@ function login_or_signup() {
 
 
 function create_account() {
+    console.log("");
+    console.log(user_hashtable);
     const created_user = ud.create_and_add_user_to_table(user_hashtable);
+    console.log(user_hashtable);
     const welcome = `Welcome ${created_user.name1} ${created_user.name2}.`;
     loggedin_user = created_user.id;
     console.log(welcome);
+    console.log("");
     homepage_options();
 }
 
 function login(hashtable: ud.user_table) {
-    const user = prompt("Enter personal ID");
+    console.log("Enter personal ID:")
+    const user = prompt("");
         if (user !== null) {
             const user_int = +user;
             loggedin_user = user_int;
@@ -93,6 +114,7 @@ function login(hashtable: ud.user_table) {
             const lookup = ud.find_user_record(user_int, hashtable);
             
             if (lookup?.id === user_int) {
+                console.log("");
                 const welcome = `Welcome back ${lookup.name1} ${lookup.name2}.`
                 console.log(welcome);
                 homepage_options();
@@ -106,39 +128,56 @@ function login(hashtable: ud.user_table) {
         
 }
 
-function homepage_options() {
+export function homepage_options() {
+    console.log("");
     console.log("What do you want to do?");
     console.log('1. Find parking');
     console.log('2. End ongoing parking');
     console.log('3. Check parking history');
     console.log('4. Park at your booked spot');
-    console.log('5. Log out');
+    console.log('5. See your personal information')
+    console.log('6. Log out');
     console.log("");
 
-    console.log("Enter 1, 2, 3, 4 or 5.");
+    console.log("Enter 1, 2, 3, 4, 5 or 6.");
     const choise = prompt("");
 
     if (choise === "1") {
+        console.log("");
         find_parking();
     } 
     else if (choise === "2"){
+        console.log("");
         leave(loggedin_user);
     }
     else if (choise === "3"){
-        display_history_fine(history_table);   
+        console.log("");
+        display_history_fine(ud.load_history_from_file(history_file));   
     } 
     else if ( choise === '4') {
+        console.log("");
         parking(loggedin_user);
     }
-    
     else if (choise === '5') {
-        process.exit();
+        console.log("");
+        user_info(loggedin_user);
+    }
+    else if (choise === '6') {
+        exit_app();
     }
     
     else {
+        console.log("");
         console.log("Invalid input, please try again");
         homepage_options();
     }
+}
+
+export function press_homepage() {
+    console.log("")
+    console.log("Press enter to go back to home menu.");
+    const answer = prompt("");
+    homepage_options();
 }
 
 // User history functions
@@ -152,7 +191,7 @@ function display_history_fine(table: ud.history_table) {
     if (record) {
         // Retrieve parking history and fine history from the history-fine record
         const userHistory = ud.get_user_history(record);
-        const userFineHistory = ud.get_user_fine_history(record);
+        const userFineHistory = ud.get_user_fine(record);
 
         // Display parking history
         console.log("Parking History:");
@@ -169,8 +208,11 @@ function display_history_fine(table: ud.history_table) {
         } else {
             console.log("No fine history found.");
         }
+        press_homepage();
+
     } else {
         console.log("No history-fine record found for the logged-in user.");
+        press_homepage();
     }
 }
 
@@ -182,11 +224,12 @@ function display_fine(userFineHistory: ud.fine_record): void {
     console.log(`Info: ${userFineHistory.info.area}, Cost: ${userFineHistory.cost}`);
 }
 
-// Find parking functions
+// Parking functions
 
 function find_parking() {
     console.log('What is your location: 1 - Ångström, 2 - Centralen: ');
-    const answer_place = prompt("")
+    const answer_place = prompt("");
+    console.log("");
             
     if ( answer_place === '1') {
         console.log(gq.Find_Parking_lots(gq.graph_uppsala, 0));
@@ -206,11 +249,13 @@ function find_parking() {
 function book_parking() {
     console.log('Do you want to book parking? (yes/no):')
     const answer = prompt("")
+    console.log("");
 
     if(answer === 'yes'){
         const reservation = ask_date(loggedin_user);
         ask_park(reservation.dateStart, reservation.dateEnd, loggedin_user);
         console.log("Your booking is registered");
+        press_homepage();
     }
 
     else if (answer === 'no') {
@@ -223,5 +268,32 @@ function book_parking() {
     }
 }
 
+// User information
+
+function user_info(user: number) {
+    const info = ud.find_user_record(loggedin_user, user_hashtable);
+    if (info) {
+        console.log("First name: ", info.name1);
+        console.log("Last name: ", info.name2);
+        console.log("Personal ID: ", info.id);
+        console.log("Your car: ", info.car);
+        console.log("Phone number: ", info.call_id);
+        console.log("Email: ", info.email);
+        console.log("");
+        press_homepage();
+    } else {
+        console.log("User not found.")
+        press_homepage();
+    }
+    
+}
+
+function exit_app() {
+    console.log("");
+    console.log("Closing Parking Buddy.");
+    ud.save_user_hash_to_file(user_file, user_hashtable);
+    ud.save_history_to_file(ud.history_file, ud.load_history_from_file(history_file));
+    process.exit();
+}
 
 start();

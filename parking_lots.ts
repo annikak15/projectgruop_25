@@ -1,6 +1,6 @@
 import { ParkingTable } from "./project_booking";
-
-import { empty } from "./lib/prio_queue";
+import { HashFunction, probe_linear } from "../lib/hashtables";
+import { empty } from "../../lib/prio_queue";
 
 import * as fs from 'fs';
 
