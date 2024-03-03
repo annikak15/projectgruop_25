@@ -1,23 +1,18 @@
 import * as promptSync from "prompt-sync";
-import { Person, Reservation, find_unbooked, leave_spot, make_booking, park_at } from "./project_booking";
+import { Reservation, find_unbooked, leave_spot, make_booking, park_at 
+} from "./project_booking";
 import { get_park_from_parkingLots, set_up } from "./parking_lots";
 import { homepage_options, press_homepage} from './start'
 
-
 const prompt = promptSync(); 
-
-//OBS OBS OM DU TEST-KÖR OCH VILL ANVÄNDA SAMMA INFO, använd set_up
-set_up();
-
-const personID = 20040520 //TEMPORÄRT!!!
 
 /**
  * Asks the user for a start and an end date, keeps asking untill it gets a
  * valid date. When the user has given a correct date the function returns 
  * a reservation (a record with the start date, end date and the user's ID)
- * @param person The user's id
+ * @param person The user's id number 
  * @returns Returns a reservation, a record with the start and end date as well
- *      as the user's ID
+ *      as the user's ID number
  */
 export function ask_date(person: number): Reservation{
     function is_invalid_date(dateS: Date, dateE: Date):boolean {
@@ -38,14 +33,18 @@ export function ask_date(person: number): Reservation{
         console.log("Please write date and time like this: YYYY-MM-DD HH:MM");
         console.log("When do you want your reservation to start?");
         userInput1 = prompt("");
+
         if (userInput1 === "q") {
             homepage_options();
         } else {
+
             dateStart = new Date(userInput1);
             console.log("When do you want your reservation to end?");
             userInput2 = prompt("");
+
             if (userInput2 === "q") {
                 homepage_options();
+
             } else {
                 dateEnd = new Date(userInput2);
                 validDate = is_invalid_date(dateStart, dateEnd);
@@ -67,7 +66,7 @@ export function ask_date(person: number): Reservation{
  * @modifies Modifies the 
  */
 export function ask_park(dateS: Date, dateE: Date, person: number): void {
-    let spot = NaN; //Temporärt 
+    let spot = NaN; 
     const file = "saved_parking_lots.json";
     let userInput: string = "";
     let validPark = false;
@@ -77,34 +76,34 @@ export function ask_park(dateS: Date, dateE: Date, person: number): void {
         console.log("Where do you want to park?");
         userInput = prompt("").toLocaleLowerCase();
         console.log("");
+
         if (userInput === "q") {
             homepage_options();
-        } else {
-            //LETAA REDA PÅ PARKERINGAR I NÄRHETEN? 
+        } else { 
             const park = get_park_from_parkingLots(file, userInput);
-            //Kollar om man skrivit in parkering som existerar
+            //checks if user put in an exsisting parking lot 
             if (park === undefined) {
                 continue;
-            //Kollar så att man inte använder test-parkeringar 
+            //Making sure th user doesn't use the test lots 
             } else if(park.name === "test" || park.name === "empty") {
                 continue;
-            //Valt en parkering som finns 
+            
             } else {
                 const unbooked = find_unbooked(dateS, dateE, park);
-                //Kollar om det finns plats 
+                //Checking if the parking lot is empty 
                 if (unbooked.length === 0) {
                     console.log("That lot is full, pick another parking lot")   
-                //finns plats på parkering
+                
                 } else {
                     let validAnswer = false; 
-                    //Kollar så att man väljer en ledig plats på parkeringen
+                    //Making sure the user picks an empty spot 
                     while(!validAnswer) {
                         console.log("");
                         console.log("Choose one of these spots:");
                         console.log(unbooked.toString());
                         spot = Number(prompt("")); 
+
                         if(spot in unbooked) {
-                            //Här avslutas while-loopen
                             validAnswer = true; 
                             validPark = true; 
                             make_booking(dateS, dateE, spot, park, person);
@@ -117,36 +116,49 @@ export function ask_park(dateS: Date, dateE: Date, person: number): void {
 }
 
 /**
- * 
- * @param personID 
+ * Asks the user to put in a valid parking lot and parking lot they want to park
+ * at. If the user has a reservation placed at that lot and spot they will be
+ * registered as parked in the parkingTable.
+ * @param personID the user's ID number
+ * @modifies the parkingTable of the parking lot if the user successfully parks 
+ *      at the spot. The file "saved_parking_lots.json" will also be changed, 
+ *      the updated parkingTable will replace the old version in the file.
+ *      If the user decide to quit no changes will occur.
  */
 export function parking(personID: number): void {
     let validAnsw = false;
+
     while(!validAnsw) {
         const file = "saved_parking_lots.json";
         console.log("press q to quit");
         const userInput = prompt("At what parking lot? ").toLocaleLowerCase(); 
+
         if (userInput === "q") {
             homepage_options(); 
         } else {
             const park = get_park_from_parkingLots(file, userInput);
+
             if (park === undefined) {
                 console.log("not valid parking lot")
                 parking(personID);
-            //Kollar så att man inte använder test-parkeringar 
+            //Making sure th user doesn't use the test lots 
             } else if(park.name === "test" || park.name === "empty") {
                 console.log("not valid parking lot")
                 parking(personID);
-            //Valt en parkering som finns 
+            
             } else {
                 const spot = Number(prompt("At what spot? "));
-                validAnsw = (park_at(park, spot, personID)); //Lite förvirrande kanske, men om den är true så har man lyckats parkera
-                console.log("You are now parked.")
+                validAnsw = (park_at(park, spot, personID)); 
+                //Checked if managed to park
+                if(validAnsw) {
+                    console.log("You are now parked.");   
+                } else {
+                    console.log("You don't have a reservation for that spot")
+                }
             }
-            press_homepage();
-            
         }
     }
+    press_homepage();
 }
 
 /**
@@ -155,7 +167,9 @@ export function parking(personID: number): void {
  * ongoing parking. 
  * @param personID the user's ID
  * @modifies the parkingTable of the parking lot if the user successfully leaves 
- *      the spot. If the user decide to quit no changes will occur 
+ *      the spot. The file "saved_parking_lots.json" will also be changed, 
+ *      the updated parkingTable will replace the old version in the file.
+ *      If the user decide to quit no changes will occur.
  */
 export function leave(personID: number): void {
     let validAnsw = false;
@@ -183,30 +197,11 @@ export function leave(personID: number): void {
                     console.log("You have ended your parking");
                     press_homepage();
                 } else {
-                    console.log("Invalid spot or you have no parking at this spot.");
+                    console.log("You are not parked at this spot or location");
                     continue;
                 }
             }
         }
     }
 }
-
-
-
-// //OM MAN VÄLJER ATT BOKA: 
-// const reservation = ask_date(personID);
-
-// ask_park(reservation.dateStart, reservation.dateEnd, personID);
-
-// //OM MAN VÄLJER ATT PARKERA: 
-// //Ta fram reservation (OBS! måste veta parkering och parkerings-plats)
-// //Lättast för oss om användaren bara skriver in vart den vill parkera, men 
-// //det blir inte lättast för användaren eftersom den måste komma ihåg allt 
-// parking(personID);
-
-
-// //OM MAN VÄLJER ATT LÄMNA PARKERING 
-// //samma som när man väljer att parkera, lättare för oss om användaren skriver in själv 
-// leave(personID);
-
 
