@@ -1,5 +1,5 @@
 import * as promptSync from "prompt-sync";
-import { Reservation, find_unbooked, leave_spot, make_booking, park_at 
+import { Reservation, find_unbooked, leave_spot, make_booking, make_date_number, park_at 
 } from "./project_booking";
 import { get_park_from_parkingLots, set_up } from "./parking_lots";
 import { homepage_options, press_homepage} from './start'
@@ -20,7 +20,7 @@ export function ask_date(person: number): Reservation{
            dateE.toString() === "Invalid Date") {
             return false;
         } else {
-            return true; 
+            return (make_date_number(dateS) < make_date_number(dateE)); 
         }
     }
     let userInput1: string = ""
