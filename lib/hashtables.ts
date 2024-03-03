@@ -1,5 +1,5 @@
 import { type Pair, type List, head, tail, flatten, 
-         build_list, map, filter, pair, is_null } from '../../../lib/list';
+         build_list, map, filter, pair, is_null } from './list';
 
 
 /**
