@@ -1,6 +1,7 @@
 import * as promptSync from "prompt-sync";
 import { Person, Reservation, find_unbooked, leave_spot, make_booking, park_at } from "./project_booking";
 import { get_park_from_parkingLots, set_up } from "./parking_lots";
+import { homepage_options, press_homepage} from './start'
 
 
 const prompt = promptSync(); 
@@ -38,13 +39,13 @@ export function ask_date(person: number): Reservation{
         console.log("When do you want your reservation to start?");
         userInput1 = prompt("");
         if (userInput1 === "q") {
-            break;
+            homepage_options();
         } else {
             dateStart = new Date(userInput1);
             console.log("When do you want your reservation to end?");
             userInput2 = prompt("");
             if (userInput2 === "q") {
-                break;
+                homepage_options();
             } else {
                 dateEnd = new Date(userInput2);
                 validDate = is_invalid_date(dateStart, dateEnd);
@@ -75,8 +76,9 @@ export function ask_park(dateS: Date, dateE: Date, person: number): void {
         console.log("press q to quit");
         console.log("Where do you want to park?");
         userInput = prompt("").toLocaleLowerCase();
+        console.log("");
         if (userInput === "q") {
-            break;
+            homepage_options();
         } else {
             //LETAA REDA PÅ PARKERINGAR I NÄRHETEN? 
             const park = get_park_from_parkingLots(file, userInput);
@@ -97,6 +99,7 @@ export function ask_park(dateS: Date, dateE: Date, person: number): void {
                     let validAnswer = false; 
                     //Kollar så att man väljer en ledig plats på parkeringen
                     while(!validAnswer) {
+                        console.log("");
                         console.log("Choose one of these spots:");
                         console.log(unbooked.toString());
                         spot = Number(prompt("")); 
@@ -117,28 +120,31 @@ export function ask_park(dateS: Date, dateE: Date, person: number): void {
  * 
  * @param personID 
  */
-export function parking(personID): void {
+export function parking(personID: number): void {
     let validAnsw = false;
     while(!validAnsw) {
         const file = "saved_parking_lots.json";
         console.log("press q to quit");
         const userInput = prompt("At what parking lot? ").toLocaleLowerCase(); 
         if (userInput === "q") {
-            break; 
+            homepage_options(); 
         } else {
             const park = get_park_from_parkingLots(file, userInput);
             if (park === undefined) {
                 console.log("not valid parking lot")
-                continue;
+                parking(personID);
             //Kollar så att man inte använder test-parkeringar 
             } else if(park.name === "test" || park.name === "empty") {
                 console.log("not valid parking lot")
-                continue;
+                parking(personID);
             //Valt en parkering som finns 
             } else {
                 const spot = Number(prompt("At what spot? "));
                 validAnsw = (park_at(park, spot, personID)); //Lite förvirrande kanske, men om den är true så har man lyckats parkera
+                console.log("You are now parked.")
             }
+            press_homepage();
+            
         }
     }
 }
@@ -151,23 +157,23 @@ export function parking(personID): void {
  * @modifies the parkingTable of the parking lot if the user successfully leaves 
  *      the spot. If the user decide to quit no changes will occur 
  */
-export function leave(personID): void {
+export function leave(personID: number): void {
     let validAnsw = false;
     while(!validAnsw) {
         const file = "saved_parking_lots.json";
         console.log("press q to quit");
         const userInput = prompt("At what parking lot? ").toLocaleLowerCase(); 
         if(userInput === "q") {
-            break;
+            homepage_options();
         } else {
             const park = get_park_from_parkingLots(file, userInput);
             if (park === undefined) {
                 console.log("not valid parking lot")
-                continue;
+                leave(personID);
             //Kollar så att man inte använder test-parkeringar 
             } else if(park.name === "test" || park.name === "empty") {
                 console.log("not valid parking lot")
-                continue;
+                leave(personID);
             //Valt en parkering som finns 
             } else {
                 const spot = Number(prompt("At what spot? "));
@@ -175,28 +181,32 @@ export function leave(personID): void {
                 if (leftSpot) {
                     validAnsw = true;
                     console.log("You have ended your parking");
+                    press_homepage();
                 } else {
-                    console.log("Invalid spot");
+                    console.log("Invalid spot or you have no parking at this spot.");
+                    continue;
                 }
             }
         }
     }
 }
 
-//OM MAN VÄLJER ATT BOKA: 
-const reservation = ask_date(personID);
-
-ask_park(reservation.dateStart, reservation.dateEnd, personID);
-
-//OM MAN VÄLJER ATT PARKERA: 
-//Ta fram reservation (OBS! måste veta parkering och parkerings-plats)
-//Lättast för oss om användaren bara skriver in vart den vill parkera, men 
-//det blir inte lättast för användaren eftersom den måste komma ihåg allt 
-parking(personID);
 
 
-//OM MAN VÄLJER ATT LÄMNA PARKERING 
-//samma som när man väljer att parkera, lättare för oss om användaren skriver in själv 
-leave(personID);
+// //OM MAN VÄLJER ATT BOKA: 
+// const reservation = ask_date(personID);
+
+// ask_park(reservation.dateStart, reservation.dateEnd, personID);
+
+// //OM MAN VÄLJER ATT PARKERA: 
+// //Ta fram reservation (OBS! måste veta parkering och parkerings-plats)
+// //Lättast för oss om användaren bara skriver in vart den vill parkera, men 
+// //det blir inte lättast för användaren eftersom den måste komma ihåg allt 
+// parking(personID);
+
+
+// //OM MAN VÄLJER ATT LÄMNA PARKERING 
+// //samma som när man väljer att parkera, lättare för oss om användaren skriver in själv 
+// leave(personID);
 
 
