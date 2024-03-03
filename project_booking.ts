@@ -22,11 +22,17 @@ const history_table = ud.create_history_table(10);
  * 
  * Examples: 
  * Valid: 
+ * const personId = 200405200000;
  * 
  * Borderline: 
+ * //Not real date 
+ * const personIdBorder1 = 200370900000; 
+ * 
+ * //Too short number 
+ * const personIdBorder2 = 20; 
  * 
  * Invalid: 
- * not unique nr, empty?? 
+ * const personInvalid = -200405200000;
  */
 export type Person = number; 
 
@@ -36,11 +42,11 @@ export type Person = number;
  * 
  * Examples: 
  * Valid: 
- * 
- * Borderline: 
+ * cosnt spot1 = 0;
+ * const spot2 = 20; 
  * 
  * Invalid: 
- * 
+ * const spot = -20; 
  */
 export type Spot = number;
 
@@ -48,17 +54,29 @@ export type Spot = number;
  * A {Reservation} is a record.
  * It repressents a reservation of a parking spot at a specific time 
  * @param person a person represents a person's ID number 
- * @param dateStart represents the startign date of the reservation
- * @param dateEnd represents the end date of the reservation 
+ * @param dateStart represents the startign date of the reservation and is a 
+ *      date object 
+ * @param dateEnd represents the end date of the reservation and is a date 
+ *      object
  * @invariant dateStart must be at an earlier date than dateEnd 
  * 
  * Examples: 
  * Valid: 
+ * const reserv = {person: 200405200000, 
+ *                 dateStart: new Date(2024-02-22 18:00), 
+ *                 dateEnd: new Date(2024-03-09 19:00)};
  * 
  * Borderline: 
- * dateStart must be at an earlier date than dateEnd 
+ * //dateStart and dateEnd is the same date 
+ * const reservBorder = {person: 200405200000, 
+ *                       dateStart: new Date(2024-02-22 18:00), 
+ *                       dateEnd: new Date(2024-02-22 18:00)};
  * 
  * Invalid: 
+ * //dateEnd is an earlier date than dateEnd
+ * const reservInvalid = {person: 200405200000, 
+ *                        dateStart: new Date(2024-03-09 19:00), 
+ *                        dateEnd: new Date(2024-02-22 18:00)};
  * 
  */
 export type Reservation = {person: Person, 
@@ -71,14 +89,52 @@ export type Reservation = {person: Person,
  * The reservations are placed in a priority queue, where the 
  * booking start date made into a number represents the priority of the booking.
  * Bookings with a lower number, a sooner date, gets higher priority. 
- * @invariant The lower priority-number, the higher priority
+ * @invariant The lower priority-number, the higher priority. The reservation
+ *      with the lowest priority number is first in the queue
+ * @invariant The priority number of a sertain element in the queue is the 
+ *      start date turnt into a number. If dateStart = YYYY-MM-DD HH:MM then
+ *      the element has the priority number YYYYMMDDHHMM 
  * 
  * Examples: 
  * Valid: 
+ * const reservs = [0, 
+ *                  2,
+ *                  [[202401202000, {person: 200011200000,
+ *                                   dateStart: new Date(2024-01-20 20:00),
+ *                                   dateEnd: new Date(2024-05-23 20:00)}], 
+ *                   [202507080900, {person: 198009090000,
+ *                                   dateStart: new Date(2025-07-08 09:00),
+ *                                   dateEnd: new Date(2025-09-08 09:00)}]]];
  * 
  * Borderline: 
+ * //The first reservation is overlapping the second reservation
+ * const reservsB = [0, 
+ *                  2,
+ *                  [[202401202000, {person: 200011200000,
+ *                                   dateStart: new Date(2024-01-20 20:00),
+ *                                   dateEnd: new Date(2024-05-23 20:00)}], 
+ *                   [202404080900, {person: 198009090000,
+ *                                   dateStart: new Date(2024-04-08 09:00),
+ *                                   dateEnd: new Date(2025-09-08 09:00)}]]];
  * 
  * Invalid: 
+ * //The reservations are in the wrong order 
+ * const reservsInv1 = 
+ *                  [0, 
+ *                  2,
+ *                  [[202507080900, {person: 198009090000,
+ *                                   dateStart: new Date(2025-07-08 09:00),
+ *                                   dateEnd: new Date(2025-09-08 09:00)}],
+ *                   [202401202000, {person: 200011200000,
+ *                                   dateStart: new Date(2024-01-20 20:00),
+ *                                   dateEnd: new Date(2024-05-23 20:00)}]]];
+ * 
+ * //The start date doesnt match the priority number 
+ * const reservInv2 = [0, 
+ *                     1, 
+ *                     [[202322080900, {person: 198009090000,
+ *                                      dateStart: new Date(2025-07-08 09:00),
+ *                                      dateEnd: new Date(2025-09-08 09:00)}]]]
  * 
  */
 export type Reservations = Prio_Queue<Reservation>;
@@ -91,23 +147,93 @@ export type Reservations = Prio_Queue<Reservation>;
  * so, for instance, parking spot nr 0's reservations are stored at 
  * reserved[0], the person parking at spot 0 is stored at parked[0]
  * and if the spot is occupied is stored at spots[0]
+ * @param name is the name of the parking lot, is a string 
  * @param spots the spot array. Represents the spots in the parking lot. null 
  *      means that someone has left the spot. If e.g spot 0 is occupied then
  *      spots[0] = 0, else spots[0] = null or spots[0] = undefined 
  * @param parked array of people that is currantly parked in a parking spot 
  * @param reserved array of prio queues that stores reservations for each 
  *      parking spot 
- * @invariant If spots[i] is neither null nor undefined, 
- *     then parked[i] contains a person.
- * @invariant When the table is empty the reserved array is full of empty 
- *      priority queues 
+ * @invariant If spots[i] is neither null nor undefined, then parked[i] contains
+ *      a person and at reserved[i] you can find the parked user's reservation 
+ *      in the queue. 
+ * @invariant When the table is empty the reserved array has as many empty 
+ *      prio queues as there are spots in the parking lot. 
+ * @invariant information about spot i is stored at spots[i], parked[i] and 
+ *      reserved[i]
  * 
  * Examples: 
  * Valid: 
+ * //A reservations queue (used in park2)
+ * const reservs1 = [0, 
+ *                  2,
+ *                  [[202401202000, {person: 200011200000,
+ *                                   dateStart: new Date(2024-01-20 20:00),
+ *                                   dateEnd: new Date(2024-05-23 20:00)}], 
+ *                   [202507080900, {person: 198009090000,
+ *                                   dateStart: new Date(2025-07-08 09:00),
+ *                                   dateEnd: new Date(2025-09-08 09:00)}]]];
+ * const reservs2 = [0, 
+ *                  1,
+ *                  [[202507080900, {person: 198009090000,
+ *                                   dateStart: new Date(2025-07-08 09:00),
+ *                                   dateEnd: new Date(2025-09-08 09:00)}]]];
  * 
- * Borderline: 
+ * //Empty parking lot with no reservations 
+ * const park1 = {name: "studenternas", 
+ *               spots: [null, null, null], 
+ *               parked: [null, null, null], 
+ *               reserved: [[0, 0, []],
+ *                          [0, 0, []],
+ *                          [0, 0, []]]}
+ * 
+ * //A parking lot with two reservations placed on spot 0
+ * const park2 = {name: "studenternas", 
+ *               spots: [null, null, null], 
+ *               parked: [null, null, null], 
+ *               reserved: [reservs1,
+ *                          [0, 0, []],
+ *                          [0, 0, []]]}
+ * 
+ * //A parking lot where the firs person in the queue has parked
+ * //Note the same reservs queue as park2
+ * const park3 = {name: "studenternas", 
+ *               spots: [0, null, null], 
+ *               parked: [200011200000, null, null], 
+ *               reserved: [reservs1,
+ *                          [0, 0, []],
+ *                          [0, 0, []]]}
+ * 
+ * //Person has left the lot, note new queue 
+ * const park3 = {name: "studenternas", 
+ *               spots: [null, null, null], 
+ *               parked: [200011200000, null, null], 
+ *               reserved: [reservs2,
+ *                          [0, 0, []],
+ *                          [0, 0, []]]}
  * 
  * Invalid:
+ * //Incorrect number of prio queues
+ * const park1 = {name: "studenternas", 
+ *               spots: [null, null, null], 
+ *               parked: [null, null, null], 
+ *               reserved: [[0, 0, []]]}
+ * 
+ * //Person has parked but without reservation (note reservs2)
+ * const park3 = {name: "studenternas", 
+ *               spots: [0, null, null], 
+ *               parked: [200011200000, null, null], 
+ *               reserved: [reservs2,
+ *                          [0, 0, []],
+ *                          [0, 0, []]]}
+ * 
+ * //Spots[0] is not null ord undefined, but parked[0] is empty 
+ * const park3 = {name: "studenternas", 
+ *               spots: [0, null, null], 
+ *               parked: [null, null, null], 
+ *               reserved: [reservs2,
+ *                          [0, 0, []],
+ *                          [0, 0, []]]}
  * 
  */
 export type ParkingTable = {
