@@ -493,7 +493,7 @@ export function park_at(park: ParkingTable, spot: number,
 
         if(finedReserv === undefined) {
             return false;
-        } else {}
+        }
 
         const fineHistory = find_history_fine(toBeFined, 
                                             load_history_from_file(history_file)); 
@@ -527,22 +527,13 @@ export function park_at(park: ParkingTable, spot: number,
     insertAt(spot);
     update_park("saved_parking_lots.json", parking); 
     const history = create_history_record(parking.name, spot.toString(), reservation.dateStart, reservation.dateEnd);
-                console.log("History", history);
                 const table = load_history_from_file(history_file);
                 const hf_record = find_history_fine(person, table);
-                console.log("hf record", history);
                 if (hf_record === undefined) {
                     const new_hf = create_history_fine_record(history);
-                    console.log("new hf", (new_hf));
-                    
-                    console.log("historyfile no add", table);
                     add_to_history_hashtable(new_hf, person, table);
-                    console.log("historyfile added", table);
                 } else {
-                    console.log("historyfile no add", table);
                     add_history_to_hf_record(history, hf_record);
-                    console.log("historyfile added", table);
-
                 }
                 save_history_to_file(history_file, table);
     return true; 
