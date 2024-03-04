@@ -1,6 +1,6 @@
 import { type ProbingFunction, type HashFunction, probe_linear, ph_empty
-} from '../../lib/hashtables'
-import { Prio_Queue, empty, is_empty, dequeue, qhead, display_queue } from '../../lib/prio_queue';
+} from './lib/hashtables'
+import { Prio_Queue, empty, is_empty, dequeue, qhead, display_queue } from './lib/prio_queue';
 
 import { get_park_from_parkingLots, update_park } from './parking_lots';
 import { start_timer } from './timer';

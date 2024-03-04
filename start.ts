@@ -1,17 +1,13 @@
 // Starts the app
 import * as ud from './user_data';
-import * as pb from './project_booking';
 import * as gq from './project_graph_queue';
-import * as g from './project_graph';
 import * as ps from "prompt-sync";
 
 import { ask_date, ask_park, parking, leave} from './booking_prompts';
-import { for_each } from '../../lib/list';
-
+import { for_each } from './lib/list';
 const prompt: ps.Prompt = ps({ sigint: true });
- // Files
-//ud.load_user_hashtable_from_file
-//ud.load_history_from_file
+
+// Files
 const user_file = "./saved_user_data.json";
 const history_file = "./saved_history_data.json"
 

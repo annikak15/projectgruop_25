@@ -1,15 +1,12 @@
 
 import {
     type List, list, for_each, filter, pair, tail, list_ref, reverse, append, map, length, is_null
-} from '../../PKD/lib/list';
-
+} from './lib/list';
 import {
     type ListGraph, build_array
-} from '../../PKD/lib/graphs';
-
+} from './lib/graphs';
 import { Prio_Queue, empty, dequeue, qhead, is_empty, display_queue, swap
-
-} from '../../PKD/lib/prio_queue'
+} from './lib/prio_queue'
 
 
 /**
