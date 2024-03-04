@@ -1,10 +1,10 @@
 import { make_booking, find_unbooked, 
-         make_date_number, ParkingTable, is_booked, find_person, 
+         make_date_number, is_booked, find_person, 
          Reservation, is_within_date, leave_spot, park_at, enqueue
 } from "./project_booking";
-import { get_park_from_parkingLots, load_parks_from_file, make_parking_table, set_up 
+import { get_park_from_parkingLots, load_parks_from_file, set_up 
 } from "./parking_lots";
-import { empty } from "./lib/prio_queue";
+
 
 
 const pFile = "saved_parking_lots.json";
@@ -90,7 +90,6 @@ test("case: find_person returns undefined if no reservation is found", () => {
 });
 
 //Testing make_booking 
-//OBS ÄNDRA SÅ ATT DET BLIR RÄTT DATUM 
 test("case: Dates sorted correctly", () => {
     set_up();
     //person A
@@ -140,11 +139,6 @@ test("case: trying to book a spot that is not available", () => {
 });
 
 //Testing leave_park 
-/**
- * Testa: 
- * - Lämna spot man inte står på 
- * - lämna spot normalt och någon före som ej använt park_at
- */
 test("case: leaving when you are parked at a parking spot", () => {
     set_up();
     const park = get_park_from_parkingLots(pFile, "test")!;

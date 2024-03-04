@@ -197,7 +197,7 @@ export type Reservations = Prio_Queue<Reservation>;
  *                          [0, 0, []]]}
  * 
  * //Person has left the lot, note new queue 
- * const park3 = {name: "studenternas", 
+ * const park4 = {name: "studenternas", 
  *               spots: [null, null, null], 
  *               parked: [200011200000, null, null], 
  *               reserved: [reservs2,
@@ -206,13 +206,13 @@ export type Reservations = Prio_Queue<Reservation>;
  * 
  * Invalid:
  * //Incorrect number of prio queues
- * const park1 = {name: "studenternas", 
+ * const parkInv1 = {name: "studenternas", 
  *               spots: [null, null, null], 
  *               parked: [null, null, null], 
  *               reserved: [[0, 0, []]]}
  * 
  * //Person has parked but without reservation (note reservs2)
- * const park3 = {name: "studenternas", 
+ * const parkInv2 = {name: "studenternas", 
  *               spots: [0, null, null], 
  *               parked: [200011200000, null, null], 
  *               reserved: [reservs2,
@@ -220,7 +220,7 @@ export type Reservations = Prio_Queue<Reservation>;
  *                          [0, 0, []]]}
  * 
  * //Spots[0] is not null ord undefined, but parked[0] is empty 
- * const park3 = {name: "studenternas", 
+ * const parkInv3 = {name: "studenternas", 
  *               spots: [0, null, null], 
  *               parked: [null, null, null], 
  *               reserved: [reservs2,
@@ -256,7 +256,6 @@ export function make_booking (dateStart: Date, dateEnd: Date, spot: Spot,
     const dateNr = make_date_number(dateStart); 
     enqueue(dateNr, reservation, reservations); 
     update_park("saved_parking_lots.json", parking);
-    //KANSKE ÄNDRA???
     
     const record = create_history_record(parking.name, 
                                          spot.toString(), 
@@ -485,6 +484,7 @@ export function park_at(park: ParkingTable, spot: number,
         const toBeFined = parking.parked[spot];
         const finedReserv = find_person(reservations, toBeFined);
 
+        //Checks if teh parked person has a reservation 
         if(finedReserv === undefined) {
             return false;
         }
