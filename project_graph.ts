@@ -8,12 +8,12 @@ import {
 import {
     type ListGraph, build_array
 } from './lib/graphs';
-
 import { Prio_Queue, empty, enqueue, dequeue
 } from './lib/prio_queue'
-import * as PromptSync from "prompt-sync";
+//import * as PromptSync from "prompt-sync";
+var prompt = require('prompt-sync')();
 
-const prompt: PromptSync.Prompt = PromptSync({ sigint: true });
+//const prompt: PromptSync.Prompt = PromptSync({ sigint: true });
 
 
 /**

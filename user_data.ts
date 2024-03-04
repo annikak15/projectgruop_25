@@ -87,6 +87,7 @@ type user_record  = { name1: string,
  * After each prompt, it checks that the input is of correct format, otherwise promts
  * the user again. It then concatenates all the information into a single string
  * with each data separated by a comma.
+ * @example 
  * @returns {string} The concatenated user information string.
  */
 export function get_user_info(): string { 
@@ -163,6 +164,10 @@ export function get_user_info(): string {
  * Checks if an email address is valid.
  * @param {string} email The email address to validate.
  * @returns {boolean} True if the email address is valid, false otherwise.
+ * @example Check if a sample email address is valid.
+ * const email = "example.mail@example.com";
+ * isValidEmail(email);
+ * This would return true.
  */
 export function isValidEmail(email: string): boolean {
     // Regular expressions to validate email address
@@ -172,8 +177,11 @@ export function isValidEmail(email: string): boolean {
 
 /**
  * Checks if a registration plate is valid in format "ABC123".
- * @param {string} reg_plate the registration plate to validate
- * @returns {boolean} true if the reg plate is valid, false otherwise
+ * @param {string} reg_plate The registration plate to validate.
+ * @returns {boolean} True if the reg plate is valid, false otherwise.
+ * @example const regPlate = "ABC123";
+ * isValidRegistrationPlate(regPlate);
+ * This would return true.
  */
 export function isValidRegistrationPlate(reg_plate: string): boolean {
     // Regular expression to validate registration plate format
@@ -186,6 +194,16 @@ export function isValidRegistrationPlate(reg_plate: string): boolean {
  * @param {string} user_info_string The string containing user information.
  * @returns {user_record} The user record containing the parsed user information.
  * @precondition the string is a concatenated user string from get_user_info function.
+ * @example const string = "Ellica,Sandegren,200305170000,ellica.sandegren@gmail.com,0721466217,DLJ144";
+ * create_user(string);
+ * Would return const user: user_record = {
+        name1: "Ellica",
+        name2: "Sandegren",
+        id: 200305170000,
+        email: ellica.sandegren@gmail.com,
+        call_id: 0721466217,
+        car: DLJ144
+    };
  */
 export function create_user(user_info_string: string): user_record { 
 
@@ -204,7 +222,7 @@ export function create_user(user_info_string: string): user_record {
         email: email_adress,
         call_id: phone_number,
         car: reg_plate
-    } 
+    };
     return user;
 }
 
@@ -243,10 +261,9 @@ export const probingFunction: ProbingFunction<user_id_number> = probe_linear(has
  * Creates an empty linear probing hashtable with a predefined size.
  * @param {number} hashtable_size the size of the hashtable.
  * @precondition hashtable_size is a positive number.
- * @returns {user_record} The empty hashtable to store user records.
+ * @returns {user_table} The empty hashtable to store user records.
  */
-export function create_user_table(hashtable_size: number):
-                                 ProbingHashtable<user_id_number, user_record> {
+export function create_user_table(hashtable_size: number): user_table {
     const hashtable: ProbingHashtable<user_id_number, user_record> = ph_empty(hashtable_size,
                                                                     probingFunction);
     return hashtable;
@@ -254,7 +271,7 @@ export function create_user_table(hashtable_size: number):
 
 /**
  * Finds the id in a user_record.
- * @param {user_record} user The user to to get ID of.
+ * @param {user_record} user The user to get ID of.
  * @returns {user_id_number} The id of the user.
  */
 export function get_user_id(user: user_record): user_id_number {
@@ -265,7 +282,7 @@ export function get_user_id(user: user_record): user_id_number {
 /**
  * Adds a user to the user hashtable.
  * @param {user_record} record A user_record to be added to the hashtable.
- * @param {user_id_number} user_id The id of the person_record
+ * @param {user_id_number} user_id The id of the person_record.
  * @param {user_table} hashtable The hashtable to store user.
  * @returns {user_table} The updated user hashtable.
  */
@@ -277,9 +294,13 @@ export function add_user_to_hashtable(record: user_record,
 }
 
 /**
- * Creates a user and then adds it to an user hashtable
- * @param {user_table} hashtable the hashtable to store user_records
- * @returns {user_record} the newly created user_record
+ * Creates a user and then adds it to a user hashtable.
+ * @param {user_table} hashtable The hashtable to store user records.
+ * @returns {user_record} The newly created user record.
+ * @example
+ * const hashtable: user_table = create_user_table(100);
+ * const newUser = create_and_add_user_to_table(hashtable);
+ * This would create a new user, add it to the hashtable, and return the created user.
  */
 export function create_and_add_user_to_table(hashtable: user_table): user_record {
     const user_string = get_user_info();
@@ -291,9 +312,14 @@ export function create_and_add_user_to_table(hashtable: user_table): user_record
 
 /**
  * Finds a user record in a user table, using the user id number.
- * @param {user_id_number} user The users personal id number 
+ * @param {user_id_number} user The user's personal id number.
  * @param {user_table} table The hashtable that stores user records.
- * @returns {user_record | undefined} the user record or undefined if no match is found.
+ * @returns {user_record | undefined} The user record, or undefined if no match is found.
+ * @example
+ * const user_id = 200305170000;
+ * const userTable = create_user_table(100);
+ * const userRecord = find_user_record(user_id, userTable);
+ * // This would return the record connected to user or undefined if not found.
  */
 export function find_user_record(user: user_id_number,
                                  table: user_table): user_record | undefined {
@@ -539,13 +565,21 @@ export type history_fine_record = {
 }
 
 /**
- * Creates a history record with information about parking area, spot,
+ * Creates a history record with information about the parking area, spot,
  * start time, and end time.
  * @param {string} area The parking area.
  * @param {string} spot The parking spot.
  * @param {Date | string} start The start time of parking.
  * @param {Date | string} end The end time of parking.
  * @returns {history_record} The history record.
+ * @example
+ * const history = create_history_record("Studenternas", "20", "2024-02-01 10:00", "2024-02-02 10:00");
+ * This would return: {
+        area: "Studenternas",
+        spot: "20",
+        start: "2024-02-01 10:00",
+        end: "2024-02-02 10:00" 
+    };
  */
 export function create_history_record(area: string,
                                     spot: string, 
@@ -562,8 +596,15 @@ export function create_history_record(area: string,
 
 /**
  * Creates a fine record based on a history record.
- * @param {history_record} record The history record associated with to fine.
+ * @param {history_record} record The history record associated with the fine.
  * @returns {fine_record} The fine record.
+ * @example
+ * const history = create_history_record("Studenternas", "20", "2024-02-01 10:00", "2024-02-02 10:00");
+ * const fine = create_fine_record(history);
+ * This would return: {
+        info: history
+        cost: `You have a 500 SEK fine.`
+    };
  */
 export function create_fine_record(record: history_record): fine_record {
     const result = {
@@ -574,74 +615,89 @@ export function create_fine_record(record: history_record): fine_record {
 }
 
 /**
- * Creates a history fine record combining history and fine information.
+ * Creates a history-fine record combining history and fine information.
  * @param {history_record} history The history record.
- * @returns {history_fine_record} The history fine record.
+ * @returns {history_fine_record} The history-fine record.
+ * @example
+ * const history = create_history_record("Studenternas", "20", "2024-02-01 10:00", "2024-02-02 10:00");
+ * This would return {
+        history: list(history),
+        fine: undefined
+    };
  */
 export function create_history_fine_record(history: history_record): history_fine_record {
-    //const fine = create_fine_record(history)
     const record: history_fine_record = {
         history: list(history),
         fine: undefined
-        //fine: fine ? list(fine) : undefined
     };
     return record;
 }
 
 /**
- * Adds a history record to a history fine record.
+ * Adds a history record to a history-fine record.
  * @param {history_record} history The history record to be added.
  * @param {user_id_number} user The user associated with the record.
  * @param {history_table} table The table to find history-fine records.
  * @returns {void} Modifies the history table.
+ * @example
+ * const history = create_history_record("Studenternas", "20", "2024-02-01 10:00", "2024-02-02 10:00");
+ * add_history_to_hf_record(history, 200305170000, history_table);
+ * This would add the provided history record to the history-fine record associated with the user ID.
  */
 export function add_history_to_hf_record(history: history_record,
     user: user_id_number,
     table: history_table): void {
-const record = find_history_fine(user, table);
-if (record === undefined) {
-console.log("No parking history associated to user.");
-console.log("Could not add history.");
-} else {
-// Add the history to the existing history list in the record
-record.history = append(record.history, list(history));
-// Update the history table with the modified record
-table = add_to_history_hashtable(record, user, table);
-console.log("History added to user's parking history.");
-}
+    const record = find_history_fine(user, table);
+    if (record === undefined) {
+        console.log("No parking history associated to user.");
+        console.log("Could not add history.");
+    } else {
+        // Add the history to the existing history list in the record
+        record.history = append(record.history, list(history));
+        // Update the history table with the modified record
+        table = add_to_history_hashtable(record, user, table);
+        console.log("History added to user's parking history.");
+    }
 }
 
 /**
- * Adds a fine record to a history fine record.
+ * Adds a fine record to a history-fine record.
  * @param {fine_record} fine The fine record to be added.
- * @param {user_id_number} user The user to recieve the fine.
+ * @param {user_id_number} user The user to receive the fine.
  * @param {history_table} table The table to find history-fine records.
  * @returns {void} Modifies the history table.
+ * @example
+ * const fine = create_fine_record(history);
+ * add_fine_to_hf_record(fine, 200305170000, history_table);
+ * This would add the provided fine record to the history-fine record associated with the user ID.
  */
 export function add_fine_to_hf_record(fine: fine_record,
                                     user: user_id_number,
                                     table: history_table): void {
-const record = find_history_fine(user, table);
-if (record === undefined) {
-console.log("No parking history associated to user.");
-console.log("Could not send fine.");
-} else {
-// Add the fine to the existing fine list in the record
-if (record.fine === undefined) {
-record.fine = list(fine);
-} else {
-record.fine = append(record.fine, list(fine));
-}
-// Update the history table with the modified record
-table = add_to_history_hashtable(record, user, table);
-console.log("Fine sent to user.");
-}
+    const record = find_history_fine(user, table);
+    if (record === undefined) {
+    console.log("No parking history associated to user.");
+    console.log("Could not send fine.");
+    } else {
+        // Add the fine to the existing fine list in the record
+        if (record.fine === undefined) {
+        record.fine = list(fine);
+        } else {
+        record.fine = append(record.fine, list(fine));
+        }
+    // Update the history table with the modified record
+    table = add_to_history_hashtable(record, user, table);
+    console.log("Fine sent to user.");
+    }
 }
 
 /**
  * Creates a parking history user table.
  * @param {number} hashtable_size The size of the hashtable.
  * @returns {history_table} The created history table.
+ * @example
+ * const historyTable = create_history_table(100);
+ * This would create an empty parking history hash table with a size of 100.
  */
 export function create_history_table(hashtable_size: number): history_table {
     const hashtable: history_table = ph_empty(hashtable_size, probe_linear(hash_func));
@@ -654,6 +710,10 @@ export function create_history_table(hashtable_size: number): history_table {
  * @param {user_id_number} user_id The user associated with the record.
  * @param {history_table} hashtable The history table to add record onto.
  * @returns {history_table} The updated history table.
+ * @example
+ * const historyFineRecord = create_history_fine_record(historyRecord);
+ * add_to_history_hashtable(historyFineRecord, 200305170000, historyTable);
+ * This would add the provided history fine record to the history table associated with the user ID.
  */
 export function add_to_history_hashtable(record: history_fine_record, 
                                         user_id: user_id_number, 
@@ -663,11 +723,14 @@ export function add_to_history_hashtable(record: history_fine_record,
 }
 
 /**
- * Finds a users history-fine record in a history table
- * @param {user_id_number} user The users personal id number
- * @param {history_table} table The hashtable containing history-fine records
+ * Finds a user's history-fine record in a history table.
+ * @param {user_id_number} user The user's personal ID number.
+ * @param {history_table} table The hashtable containing history-fine records.
  * @returns {history_fine_record | undefined} The record containing history
- * records and fine records
+ * records and fine records or undefined if not found.
+ * @example
+ * const userHistory = find_history_fine(200305170000, historyTable);
+ * This would return the history-fine record associated with the provided user ID
  * or undefined if not found.
  */
 export function find_history_fine(user: user_id_number,
@@ -678,8 +741,12 @@ export function find_history_fine(user: user_id_number,
 
 /**
  * Retrieves the history of a history fine record.
- * @param {history_fine_record} record the users history-fine record.
- * @returns {List<history_record> | undefined} a list of history records
+ * @param {history_fine_record} record The user's history-fine record.
+ * @returns {List<history_record> | undefined} A list of history records
+ * or undefined if not found.
+ * @example
+ * const userHistory = get_user_history(historyFineRecord);
+ * This would retrieve the history records associated with the provided history-fine record
  * or undefined if not found.
  */
 export function get_user_history(record: history_fine_record): 
@@ -690,9 +757,13 @@ export function get_user_history(record: history_fine_record):
 
 /**
  * Retrieves the fines of a history fine record.
- * @param {history_fine_record} record the users history-fine record.
- * @returns {List<fine_record> | undefined} a list of fine_records or
+ * @param {history_fine_record} record The user's history-fine record.
+ * @returns {List<fine_record> | undefined} A list of fine_records or
  * undefined if not found.
+ * @example
+ * const userFines = get_user_fine(historyFineRecord);
+ * This would return the fine records associated with the provided history-fine record
+ *  or undefined if not found.
  */
 export function get_user_fine(record: history_fine_record): 
                                     List<fine_record> | undefined {
