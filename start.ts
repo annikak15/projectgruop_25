@@ -13,7 +13,7 @@ const user_file = "./saved_user_data.json";
 const history_file = "./saved_history_data.json"
 
 const user_hashtable: ud.user_table = ud.load_user_hashtable_from_file(user_file);
-const user_table: ud.history_table = ud.load_history_from_file(history_file);
+const history_table: ud.history_table = ud.load_history_from_file(history_file);
 
 
 const app_name = [
@@ -149,6 +149,7 @@ export function homepage_options() {
         display_history_fine(ud.load_history_from_file(history_file));   
     } 
     else if ( choise === '4') {
+        ud.save_history_to_file(history_file, history_table)
         console.log("");
         parking(loggedin_user);
     }
@@ -175,8 +176,6 @@ export function press_homepage() {
 }
 
 // User history functions
-// Med antagande att history records skapas och läggs in på tablet
-// i samband med att en reservation/bokning sker.
 
 function display_history_fine(table: ud.history_table) {
     // Retrieve parking history and fine history associated with the logged-in user
@@ -218,6 +217,7 @@ function display_fine(userFineHistory: ud.fine_record): void {
     console.log(`Info: ${userFineHistory.info.area}, Cost: ${userFineHistory.cost}`);
 }
 
+
 // Parking functions
 
 function find_parking() {
@@ -228,12 +228,10 @@ function find_parking() {
     if ( answer_place === '1') {
         console.log(gq.Find_Parking_lots(gq.graph_uppsala, 0));
         book_parking();
-
     }
     else if (answer_place === '2') {
         console.log(gq.Find_Parking_lots(gq.graph_uppsala, 1)); 
         book_parking();
-
     } 
     else if (answer_place === '3'){
         console.log(gq.Find_Parking_lots(gq.graph_uppsala, 7));

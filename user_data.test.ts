@@ -177,7 +177,7 @@ test("Create a fine record", () => {
     const fine = ud.create_fine_record(history);
     const result = {
         info: history,
-        cost: `You have a 500kr fine from parking at ${history.area}.`
+        cost: "You have a 500 SEK fine."
     };
     expect(fine).toStrictEqual(result);
 
@@ -199,6 +199,8 @@ test("Create history fine record", () => {
 })
 
 test("Add history to history-fine record", () => {
+    const user = 200305170000
+    const table = ud.create_history_table(10);
     const history1 = {
         area: "studenternas",
         spot: "20",
@@ -206,6 +208,7 @@ test("Add history to history-fine record", () => {
         end: "2024-02-02 10:00" 
     };
     const record = ud.create_history_fine_record(history1);
+    ud.add_to_history_hashtable(record, user, table);
 
     const history2 = {
         area: "Grimhild",
@@ -213,7 +216,8 @@ test("Add history to history-fine record", () => {
         start: "2024-02-01 10:00",
         end: "2024-02-02 10:00" 
     };
-    const added = ud.add_history_to_hf_record(history2, record);
+    ud.add_history_to_hf_record(history2, user, table);
+    const added = ud.find_history_fine(user, table);
     const result = {
         history: list(history1, history2),
         fine: undefined
@@ -345,7 +349,7 @@ test("Append fine to already existing history-fine record list, valid", () => {
     };
     const record = ud.create_history_fine_record(history);
     ud.add_to_history_hashtable(record, user, table);
-    ud.add_history_to_hf_record(history2, record);
+    ud.add_history_to_hf_record(history2, user, table);
     
     // Add fine
     const fine = {
@@ -362,7 +366,50 @@ test("Append fine to already existing history-fine record list, valid", () => {
     //Find and match result
     const new_record = ud.find_history_fine(user, table);
     const result = {
-        history: list(history),
+        history: list(history, history2),
+        fine: list(fine, fine2)
+    };
+    expect(new_record).toStrictEqual(result);
+});
+
+test("Append history to already existing history-fine record list, valid", () => {
+    // Create and add user history to table
+    const table = ud.create_history_table(10);
+    const user = 200305170000;
+    const history1 = {
+        area: "studenternas",
+        spot: "20",
+        start: "2024-02-01 10:00",
+        end: "2024-02-02 10:00" 
+    };
+    const record = ud.create_history_fine_record(history1);
+    ud.add_to_history_hashtable(record, user, table);
+
+    const history2 = {
+        area: "Grimhild",
+        spot: "2",
+        start: "2024-02-01 10:00",
+        end: "2024-02-02 10:00" 
+    };
+    ud.add_history_to_hf_record(history2, user, table);
+    
+    // Add fine
+    const fine = {
+        info: history1,
+        cost: `You have a 500kr fine from parking at ${history1.area}.`
+    };
+    ud.add_fine_to_hf_record(fine, user, table);
+
+    const fine2 = {
+        info: history2,
+        cost: `You have a 500kr fine from parking at ${history2.area}.`
+    };
+    ud.add_fine_to_hf_record(fine2, user, table);
+
+    //Find and match result
+    const new_record = ud.find_history_fine(user, table);
+    const result = {
+        history: list(history1, history2),
         fine: list(fine, fine2)
     };
     expect(new_record).toStrictEqual(result);
@@ -430,32 +477,6 @@ test("Get a fine record from a history-fine-record", () => {
     expect(retrieved_fine).toStrictEqual(list(fine));
 })
 
-
-// //Testing reading and loading history file
-
-//  //Places to park:
-//  const p1 = "Angstrom";
-//  const p2 = "Centralen";
-//  const p3 = "BMC";
-//  const p4 = "Akademiska sjukhuset";
-
-//  //Example history records
-//  const r1: ud.history_record = {
-//     area: p1,
-//     spot: "31",
-//     start: "2023-05-24 20:30",
-//     end: "2024-05-24 20:30"
-//  };
- 
-//  function htest1(){
-//      const history = ud.create_history_record(p2, "31", "2023-05-24 20:30", "2024-05-24 20:30");
-//      const record = ud.create_history_fine_record(history);
-//      const id = 199012140000;
-//      const table = ud.create_history_table(100);
-//      ud.add_to_history_hashtable(record, id, table);
-//      console.log(table);
-//      //save_history_to_file("./saved_history_data.json", table);
-//  }
 
  test("Save history hashtable to external file and retrieve it again.", () => {
     // Places to park

@@ -1,18 +1,12 @@
-import { type ProbingFunction, type HashFunction, probe_linear, ph_empty
-} from './lib/hashtables'
 import { Prio_Queue, empty, is_empty, dequeue, qhead, display_queue } from './lib/prio_queue';
-
 import { get_park_from_parkingLots, update_park } from './parking_lots';
-import { start_timer } from './timer';
-
 import { add_fine_to_hf_record, create_fine_record, create_history_fine_record, 
         create_history_record, find_history_fine, add_history_to_hf_record,
         load_history_from_file, save_history_to_file, add_to_history_hashtable, 
 } from './user_data';
 
 const history_file = "./saved_history_data.json"
-//const history_table = load_history_from_file("./saved_history_data.json");
-
+const history_table = load_history_from_file("./saved_history_data.json");
 
 /**
  * A {Person} is a number that represents a person's ID number
@@ -496,7 +490,7 @@ export function park_at(park: ParkingTable, spot: number,
         }
 
         const fineHistory = find_history_fine(toBeFined, 
-                                            load_history_from_file(history_file)); 
+                                            history_table); 
         const record = create_history_record(parking.name, 
                                              spot.toString(), 
                                              finedReserv.dateStart, 
@@ -505,35 +499,35 @@ export function park_at(park: ParkingTable, spot: number,
             const newRecord = create_history_fine_record(record);
             const f_record = add_fine_to_hf_record(create_fine_record(record), 
                                              toBeFined, 
-                                             load_history_from_file("./saved_history_data.json"));
-            const hf_record = find_history_fine(toBeFined, load_history_from_file(history_file));
-            add_to_history_hashtable(hf_record!, toBeFined, load_history_from_file(history_file));
+                                             history_table);
+            const hf_record = find_history_fine(toBeFined, history_table);
+            add_to_history_hashtable(hf_record!, toBeFined, history_table);
         } else {
             const f_record = add_fine_to_hf_record(create_fine_record(record), 
                                              toBeFined, 
-                                             load_history_from_file("./saved_history_data.json"));
-            const hf_record = find_history_fine(toBeFined, load_history_from_file(history_file));
-            add_to_history_hashtable(hf_record!, toBeFined, load_history_from_file(history_file));
+                                             history_table);
+            const hf_record = find_history_fine(toBeFined, history_table);
+            add_to_history_hashtable(hf_record!, toBeFined, history_table);
         }
 
         leave_spot(parking, spot, toBeFined);
         parking = get_park_from_parkingLots("saved_parking_lots.json", park.name)!
         insertAt(spot);
         update_park("saved_parking_lots.json", parking); 
-        save_history_to_file(history_file, load_history_from_file(history_file));
+        save_history_to_file(history_file, history_table);
         return true;
 
     } else {}
     insertAt(spot);
     update_park("saved_parking_lots.json", parking); 
     const history = create_history_record(parking.name, spot.toString(), reservation.dateStart, reservation.dateEnd);
-                const table = load_history_from_file(history_file);
+                const table = history_table;
                 const hf_record = find_history_fine(person, table);
                 if (hf_record === undefined) {
                     const new_hf = create_history_fine_record(history);
                     add_to_history_hashtable(new_hf, person, table);
                 } else {
-                    add_history_to_hf_record(history, hf_record);
+                    add_history_to_hf_record(history, person, history_table);
                 }
                 save_history_to_file(history_file, table);
     return true; 
