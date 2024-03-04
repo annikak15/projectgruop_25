@@ -246,7 +246,6 @@ export function Dijkstras_alg(Graph: WeightedAdjacencyList, startNode: number): 
     const size: number = Graph.size
     const parents: Array<number | null> = build_array(size, () => null); 
     const distance: Array<number> = build_array(size, () => Infinity); 
-    console.log(distance[1]);
     let queue: Prio_Queue<number> = empty<number>();
 
     distance[startNode] = 0; 
@@ -256,7 +255,6 @@ export function Dijkstras_alg(Graph: WeightedAdjacencyList, startNode: number): 
         const currentnode: number = qhead(queue); 
         dequeue(queue)!;
 
-        console.log(currentnode); 
         
         const current_adjlist = Graph.adj[currentnode];
 

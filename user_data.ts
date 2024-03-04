@@ -591,16 +591,24 @@ export function create_history_fine_record(history: history_record): history_fin
 /**
  * Adds a history record to a history fine record.
  * @param {history_record} history The history record to be added.
- * @param {history_fine_record} hf_record The existing history fine record to add onto.
- * @returns {history_fine_record} The updated history fine record.
+ * @param {user_id_number} user The user associated with the record.
+ * @param {history_table} table The table to find history-fine records.
+ * @returns {void} Modifies the history table.
  */
 export function add_history_to_hf_record(history: history_record,
-                                        hf_record: history_fine_record): history_fine_record {
-    const updatedHistory = append(hf_record.history, list(history));
-    return {
-        ...hf_record,
-        history: updatedHistory,
-    };
+    user: user_id_number,
+    table: history_table): void {
+const record = find_history_fine(user, table);
+if (record === undefined) {
+console.log("No parking history associated to user.");
+console.log("Could not add history.");
+} else {
+// Add the history to the existing history list in the record
+record.history = append(record.history, list(history));
+// Update the history table with the modified record
+table = add_to_history_hashtable(record, user, table);
+console.log("History added to user's parking history.");
+}
 }
 
 /**
@@ -613,18 +621,21 @@ export function add_history_to_hf_record(history: history_record,
 export function add_fine_to_hf_record(fine: fine_record,
                                     user: user_id_number,
                                     table: history_table): void {
-    const record = find_history_fine(user, table);
-    if (record === undefined) {
-        console.log("No parking history associated to user.");
-        console.log("Could not send fine.");
-    } else {
-        if (record.fine === undefined) {
-            record.fine = list(fine);
-        } else {
-            record.fine = append(record.fine, list(fine));
-        }
-        console.log("Fine sent to user.");
-    }
+const record = find_history_fine(user, table);
+if (record === undefined) {
+console.log("No parking history associated to user.");
+console.log("Could not send fine.");
+} else {
+// Add the fine to the existing fine list in the record
+if (record.fine === undefined) {
+record.fine = list(fine);
+} else {
+record.fine = append(record.fine, list(fine));
+}
+// Update the history table with the modified record
+table = add_to_history_hashtable(record, user, table);
+console.log("Fine sent to user.");
+}
 }
 
 /**
