@@ -1,13 +1,10 @@
 import {
     type ProbingHashtable, probe_linear, ph_empty, type HashFunction, ph_insert,
-    ph_lookup, type ProbingFunction, probe_from
-} from '../../lib/hashtables'
+    ph_lookup, type ProbingFunction
+} from './lib/hashtables'
 import {
-    leave_spot, type ParkingTable, type Reservation, is_empty_spot
-} from'./project_booking'
-import {
-    type List, list, pair, type Pair, append
-} from '../../lib/list';
+    type List, list, append
+} from './lib/list';
 import * as fs from 'fs';
 const ps = require("prompt-sync");
 const prompt = ps({ sigint: true });
@@ -571,7 +568,7 @@ export function create_history_record(area: string,
 export function create_fine_record(record: history_record): fine_record {
     const result = {
         info: record,
-        cost: `You have a 500kr fine from parking at ${record.area}.`
+        cost: `You have a 500 SEK fine.`
     };
     return result;
 }

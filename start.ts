@@ -1,17 +1,14 @@
 // Starts the app
 import * as ud from './user_data';
-import * as pb from './project_booking';
 import * as gq from './project_graph_queue';
-import * as g from './project_graph';
-import * as ps from "prompt-sync";
+//import * as ps from "prompt-sync";
+var prompt = require('prompt-sync')();
 
 import { ask_date, ask_park, parking, leave} from './booking_prompts';
-import { for_each } from '../../lib/list';
+import { for_each } from './lib/list';
+//const prompt: ps.Prompt = ps({ sigint: true });
 
-const prompt: ps.Prompt = ps({ sigint: true });
- // Files
-//ud.load_user_hashtable_from_file
-//ud.load_history_from_file
+// Files
 const user_file = "./saved_user_data.json";
 const history_file = "./saved_history_data.json"
 
@@ -91,12 +88,9 @@ function login_or_signup() {
     }
 }
 
-
 function create_account() {
     console.log("");
-    console.log(user_hashtable);
     const created_user = ud.create_and_add_user_to_table(user_hashtable);
-    console.log(user_hashtable);
     const welcome = `Welcome ${created_user.name1} ${created_user.name2}.`;
     loggedin_user = created_user.id;
     console.log(welcome);
@@ -227,25 +221,34 @@ function display_fine(userFineHistory: ud.fine_record): void {
 // Parking functions
 
 function find_parking() {
-    console.log('What is your location: 1 - Ångström, 2 - Centralen: ');
+    console.log('What is your location: 1 - Ångström, 2 - Centralen, 3 - BMC, 4 - Akademiska sjukhuset: ');
     const answer_place = prompt("");
     console.log("");
-            
+
     if ( answer_place === '1') {
         console.log(gq.Find_Parking_lots(gq.graph_uppsala, 0));
         book_parking();
-        
+
     }
     else if (answer_place === '2') {
         console.log(gq.Find_Parking_lots(gq.graph_uppsala, 1)); 
         book_parking();
 
-    } else {
+    } 
+    else if (answer_place === '3'){
+        console.log(gq.Find_Parking_lots(gq.graph_uppsala, 7));
+        book_parking();
+    }
+
+    else if (answer_place === '4'){
+        console.log(gq.Find_Parking_lots(gq.graph_uppsala, 8));
+        book_parking();
+    }
+    else {
         console.log('Not valid input, try again');
         find_parking();
     }
 }
-
 function book_parking() {
     console.log('Do you want to book parking? (yes/no):')
     const answer = prompt("")

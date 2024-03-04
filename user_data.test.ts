@@ -1,5 +1,5 @@
 
-import { list } from "../../lib/list";
+import { list } from "./lib/list";
 import * as ud from "./user_data"
 
 //Is valid functions

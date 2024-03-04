@@ -1,4 +1,6 @@
-import { Prio_Queue, is_empty, dequeue, qhead } from '../lib/prio_queue';
+import { type ProbingFunction, type HashFunction, probe_linear, ph_empty
+} from './lib/hashtables'
+import { Prio_Queue, empty, is_empty, dequeue, qhead, display_queue } from './lib/prio_queue';
 
 import { get_park_from_parkingLots, update_park } from './parking_lots';
 import { start_timer } from './timer';
@@ -491,7 +493,7 @@ export function park_at(park: ParkingTable, spot: number,
         //Checks if teh parked person has a reservation 
         if(finedReserv === undefined) {
             return false;
-        } else {}
+        }
 
         const fineHistory = find_history_fine(toBeFined, 
                                         load_history_from_file(history_file)); 
@@ -538,23 +540,16 @@ export function park_at(park: ParkingTable, spot: number,
     } else {}
     insertAt(spot);
     update_park("saved_parking_lots.json", parking); 
-    const history = create_history_record(parking.name, 
-                                          spot.toString(), 
-                                          reservation.dateStart, 
-                                          reservation.dateEnd);
-
-    const table = load_history_from_file(history_file);
-    const hf_record = find_history_fine(person, table);
-
-    if (hf_record === undefined) {
-        const new_hf = create_history_fine_record(history);                    
-        add_to_history_hashtable(new_hf, person, table);
-
-    } else {
-        add_history_to_hf_record(history, hf_record);
-
-    }
-    save_history_to_file(history_file, table);
+    const history = create_history_record(parking.name, spot.toString(), reservation.dateStart, reservation.dateEnd);
+                const table = load_history_from_file(history_file);
+                const hf_record = find_history_fine(person, table);
+                if (hf_record === undefined) {
+                    const new_hf = create_history_fine_record(history);
+                    add_to_history_hashtable(new_hf, person, table);
+                } else {
+                    add_history_to_hf_record(history, hf_record);
+                }
+                save_history_to_file(history_file, table);
     return true; 
 }
 

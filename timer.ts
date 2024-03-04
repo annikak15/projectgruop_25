@@ -9,10 +9,6 @@ function math_floor(number: number): number {
     return make_int > number ? make_int - 1 : make_int;
 }
 
-console.log(math_floor(3.7));
-console.log(math_floor(-2.1));
-console.log(math_floor(0));
-
 /**
  * A timer that decreases every one second from a total amount of seconds.
  * @param {number} parking_time The amount of seconds to park
