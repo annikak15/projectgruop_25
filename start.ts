@@ -3,7 +3,7 @@ import * as ud from './user_data';
 import * as gq from './project_graph_queue';
 import * as ps from 'prompt-sync';
 import { ask_date, ask_park, parking, leave} from './booking_prompts';
-import { for_each } from '../../lib/list';
+import { for_each } from './lib/list';
 
 const prompt: ps.Prompt = ps({ sigint: true });
 const user_file = "./saved_user_data.json";
@@ -11,7 +11,6 @@ const history_file = "./saved_history_data.json"
 
 const user_hashtable: ud.user_table = ud.load_user_hashtable_from_file(user_file);
 const user_table: ud.history_table = ud.load_history_from_file(history_file);
-
 
 const app_name = [
    " ____   ____  ____   __  _  ____  ____    ____      ____   __ __  ___    ___    __ __  ",
@@ -84,7 +83,6 @@ function login_or_signup() {
         login_or_signup();
     }
 }
-
 
 function create_account() {
     console.log("");
@@ -175,8 +173,6 @@ export function press_homepage() {
 }
 
 // User history functions
-// Med antagande att history records skapas och läggs in på tablet
-// i samband med att en reservation/bokning sker.
 
 function display_history_fine(table: ud.history_table) {
     // Retrieve parking history and fine history associated with the logged-in user
@@ -221,20 +217,30 @@ function display_fine(userFineHistory: ud.fine_record): void {
 // Parking functions
 
 function find_parking() {
-    console.log('What is your location: 1 - Ångström, 2 - Centralen: ');
+    console.log('What is your location: 1 - Ångström, 2 - Centralen, 3 - BMC, 4 - Akademiska sjukhuset: ');
     const answer_place = prompt("");
     console.log("");
-            
+
     if ( answer_place === '1') {
         console.log(gq.Find_Parking_lots(gq.graph_uppsala, 0));
         book_parking();
-        
+
     }
     else if (answer_place === '2') {
         console.log(gq.Find_Parking_lots(gq.graph_uppsala, 1)); 
         book_parking();
 
-    } else {
+    } 
+    else if (answer_place === '3'){
+        console.log(gq.Find_Parking_lots(gq.graph_uppsala, 7));
+        book_parking();
+    }
+
+    else if (answer_place === '4'){
+        console.log(gq.Find_Parking_lots(gq.graph_uppsala, 8));
+        book_parking();
+    }
+    else {
         console.log('Not valid input, try again');
         find_parking();
     }
