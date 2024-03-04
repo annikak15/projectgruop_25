@@ -1,6 +1,4 @@
-import { type ProbingFunction, type HashFunction, probe_linear, ph_empty
-} from './lib/hashtables'
-import { Prio_Queue, empty, is_empty, dequeue, qhead, display_queue } from './lib/prio_queue';
+import { Prio_Queue, is_empty, dequeue, qhead, } from './lib/prio_queue';
 
 import { get_park_from_parkingLots, update_park } from './parking_lots';
 import { start_timer } from './timer';
@@ -61,20 +59,20 @@ export type Spot = number;
  * Examples: 
  * Valid: 
  * const reserv = {person: 200405200000, 
- *                 dateStart: new Date(2024-02-22 18:00), 
- *                 dateEnd: new Date(2024-03-09 19:00)};
+ *                 dateStart: new Date("2024-02-22 18:00"), 
+ *                 dateEnd: new Date("2024-03-09 19:00")};
  * 
  * Borderline: 
  * //dateStart and dateEnd is the same date 
  * const reservBorder = {person: 200405200000, 
- *                       dateStart: new Date(2024-02-22 18:00), 
- *                       dateEnd: new Date(2024-02-22 18:00)};
+ *                       dateStart: new Date("2024-02-22 18:00"), 
+ *                       dateEnd: new Date("2024-02-22 18:00")};
  * 
  * Invalid: 
  * //dateEnd is an earlier date than dateEnd
  * const reservInvalid = {person: 200405200000, 
- *                        dateStart: new Date(2024-03-09 19:00), 
- *                        dateEnd: new Date(2024-02-22 18:00)};
+ *                        dateStart: new Date("2024-03-09 19:00"), 
+ *                        dateEnd: new Date("2024-02-22 18:00")};
  * 
  */
 export type Reservation = {person: Person, 
@@ -98,22 +96,22 @@ export type Reservation = {person: Person,
  * const reservs = [0, 
  *                  2,
  *                  [[202401202000, {person: 200011200000,
- *                                   dateStart: new Date(2024-01-20 20:00),
- *                                   dateEnd: new Date(2024-05-23 20:00)}], 
+ *                                   dateStart: new Date("2024-01-20 20:00"),
+ *                                   dateEnd: new Date("2024-05-23 20:00")}], 
  *                   [202507080900, {person: 198009090000,
- *                                   dateStart: new Date(2025-07-08 09:00),
- *                                   dateEnd: new Date(2025-09-08 09:00)}]]];
+ *                                   dateStart: new Date("2025-07-08 09:00"),
+ *                                   dateEnd: new Date("2025-09-08 09:00")}]]];
  * 
  * Borderline: 
  * //The first reservation is overlapping the second reservation
  * const reservsB = [0, 
  *                  2,
  *                  [[202401202000, {person: 200011200000,
- *                                   dateStart: new Date(2024-01-20 20:00),
- *                                   dateEnd: new Date(2024-05-23 20:00)}], 
+ *                                   dateStart: new Date("2024-01-20 20:00"),
+ *                                   dateEnd: new Date("2024-05-23 20:00")}], 
  *                   [202404080900, {person: 198009090000,
- *                                   dateStart: new Date(2024-04-08 09:00),
- *                                   dateEnd: new Date(2025-09-08 09:00)}]]];
+ *                                   dateStart: new Date("2024-04-08 09:00"),
+ *                                   dateEnd: new Date("2025-09-08 09:00")}]]];
  * 
  * Invalid: 
  * //The reservations are in the wrong order 
@@ -121,18 +119,18 @@ export type Reservation = {person: Person,
  *                  [0, 
  *                  2,
  *                  [[202507080900, {person: 198009090000,
- *                                   dateStart: new Date(2025-07-08 09:00),
- *                                   dateEnd: new Date(2025-09-08 09:00)}],
+ *                                   dateStart: new Date("2025-07-08 09:00"),
+ *                                   dateEnd: new Date("2025-09-08 09:00")}],
  *                   [202401202000, {person: 200011200000,
- *                                   dateStart: new Date(2024-01-20 20:00),
- *                                   dateEnd: new Date(2024-05-23 20:00)}]]];
+ *                                   dateStart: new Date("2024-01-20 20:00"),
+ *                                   dateEnd: new Date("2024-05-23 20:00")}]]];
  * 
  * //The start date doesnt match the priority number 
  * const reservInv2 = [0, 
  *                     1, 
  *                     [[202322080900, {person: 198009090000,
- *                                      dateStart: new Date(2025-07-08 09:00),
- *                                      dateEnd: new Date(2025-09-08 09:00)}]]]
+ *                                      dateStart: new Date("2025-07-08 09:00"),
+ *                                      dateEnd: new Date("2025-09-08 09:00")}]]]
  * 
  */
 export type Reservations = Prio_Queue<Reservation>;
@@ -166,21 +164,21 @@ export type Reservations = Prio_Queue<Reservation>;
  * const reservs1 = [0, 
  *                  2,
  *                  [[202401202000, {person: 200011200000,
- *                                   dateStart: new Date(2024-01-20 20:00),
- *                                   dateEnd: new Date(2024-05-23 20:00)}], 
+ *                                   dateStart: new Date("2024-01-20 20:00"),
+ *                                   dateEnd: new Date("2024-05-23 20:00")}], 
  *                   [202507080900, {person: 198009090000,
- *                                   dateStart: new Date(2025-07-08 09:00),
- *                                   dateEnd: new Date(2025-09-08 09:00)}]]];
+ *                                   dateStart: new Date("2025-07-08 09:00"),
+ *                                   dateEnd: new Date("2025-09-08 09:00")}]]];
  * const reservs2 = [0, 
  *                  1,
  *                  [[202507080900, {person: 198009090000,
- *                                   dateStart: new Date(2025-07-08 09:00),
- *                                   dateEnd: new Date(2025-09-08 09:00)}]]];
+ *                                   dateStart: new Date("2025-07-08 09:00"),
+ *                                   dateEnd: new Date("2025-09-08 09:00")}]]];
  * 
  * //Empty parking lot with no reservations 
  * const park1 = {name: "studenternas", 
  *               spots: [null, null, null], 
- *               parked: [null, null, null], 
+ *               parked: [], 
  *               reserved: [[0, 0, []],
  *                          [0, 0, []],
  *                          [0, 0, []]]}
@@ -188,7 +186,7 @@ export type Reservations = Prio_Queue<Reservation>;
  * //A parking lot with two reservations placed on spot 0
  * const park2 = {name: "studenternas", 
  *               spots: [null, null, null], 
- *               parked: [null, null, null], 
+ *               parked: [], 
  *               reserved: [reservs1,
  *                          [0, 0, []],
  *                          [0, 0, []]]}
@@ -197,7 +195,7 @@ export type Reservations = Prio_Queue<Reservation>;
  * //Note the same reservs queue as park2
  * const park3 = {name: "studenternas", 
  *               spots: [0, null, null], 
- *               parked: [200011200000, null, null], 
+ *               parked: [200011200000, undefined, undefined], 
  *               reserved: [reservs1,
  *                          [0, 0, []],
  *                          [0, 0, []]]}
@@ -205,7 +203,7 @@ export type Reservations = Prio_Queue<Reservation>;
  * //Person has left the lot, note new queue 
  * const park4 = {name: "studenternas", 
  *               spots: [null, null, null], 
- *               parked: [200011200000, null, null], 
+ *               parked: [200011200000, undefined, undefined], 
  *               reserved: [reservs2,
  *                          [0, 0, []],
  *                          [0, 0, []]]}
@@ -214,13 +212,13 @@ export type Reservations = Prio_Queue<Reservation>;
  * //Incorrect number of prio queues
  * const parkInv1 = {name: "studenternas", 
  *               spots: [null, null, null], 
- *               parked: [null, null, null], 
+ *               parked: [], 
  *               reserved: [[0, 0, []]]}
  * 
  * //Person has parked but without reservation (note reservs2)
  * const parkInv2 = {name: "studenternas", 
  *               spots: [0, null, null], 
- *               parked: [200011200000, null, null], 
+ *               parked: [200011200000, undefined, undefined], 
  *               reserved: [reservs2,
  *                          [0, 0, []],
  *                          [0, 0, []]]}
@@ -228,7 +226,7 @@ export type Reservations = Prio_Queue<Reservation>;
  * //Spots[0] is not null ord undefined, but parked[0] is empty 
  * const parkInv3 = {name: "studenternas", 
  *               spots: [0, null, null], 
- *               parked: [null, null, null], 
+ *               parked: [undefined, undefined, undefined], 
  *               reserved: [reservs2,
  *                          [0, 0, []],
  *                          [0, 0, []]]}
@@ -243,6 +241,27 @@ export type ParkingTable = {
 
 /**
  * Makes a reservation for a parking spot in a parking lot. 
+ * @example 
+ * const park = {name: "test", 
+ *               spots: [null, null, null], 
+ *               parked: [], 
+ *               reserved: [[0, 0, []],
+ *                          [0, 0, []],
+ *                          [0, 0, []]]}
+ * 
+ * //making a reservation, function returns undefined 
+ * make_booking(new Date("2024-03-04"), new Date("2025-10-01"), 
+ *              0, park, 200405201111);
+ * 
+ * console.log(park) //Will show the following: 
+ * //{name: "test", 
+ * // spots: [null, null, null], 
+ * // parked: [], 
+ * // reserved: [[0, 0, [Array]],
+ * //           [0, 0, []],
+ * //           [0, 0, []]]}
+ * 
+ * 
  * @param dateStart The start date of the booking 
  * @param dateEnd The end date of the booking 
  * @param spot The empty spot that the user chose 
@@ -272,7 +291,7 @@ export function make_booking (dateStart: Date, dateEnd: Date, spot: Spot,
 /**
  * Turns a date into a 12 digit number, YYYYMMDDHHMM
  * @example
- *      make_date_number(new Date(2024-02-29 18:39)); //returns 202402291839
+ *      make_date_number(new Date("2024-02-29 18:39")); //returns 202402291839
  * @param date A date in the format YYYY-MM-DD HH:MM
  * @returns returns a 12 digit number 
  */
@@ -288,8 +307,8 @@ export function make_date_number(date: Date): number{
 /**
  * Adds an extra 15 minutes to a date 
  * @example 
- *      add_15_minutes(new Date(2024-02-29 18:00)); //returns 2024-02-29 18:15
- *      add_15_minutes(new Date(2024-02-29 23:45)); //returns 2024-03-01 00:00
+ *      add_15_minutes(new Date("2024-02-29 18:00")); //returns 2024-02-29 18:15
+ *      add_15_minutes(new Date("2024-02-29 23:45")); //returns 2024-03-01 00:00
  * @param date the date you are adding 15 minutes to
  * @returns returns the date with 15 minutes added to it 
  */
@@ -304,6 +323,22 @@ function add_15_minutes(d: Date): Date{
 /**
  * Checks if a parking spot is reserved during the time a person want to 
  * book a spot.
+ * @example
+ * const reservs = [0, 
+ *                  2,
+ *                  [[202401202000, {person: 200011200000,
+ *                                   dateStart: new Date("2024-01-20 20:00"),
+ *                                   dateEnd: new Date("2024-05-23 20:00")}], 
+ *                   [202507080900, {person: 198009090000,
+ *                                   dateStart: new Date("2025-07-08 09:00"),
+ *                                   dateEnd: new Date("2025-09-08 09:00")}]]];
+ * 
+ * //returns true 
+ * is_booked(new Date("2024-06-01"), new Date("2024-07-01"), reservs); 
+ * 
+ * //returns false
+ * is_booked(new Date("2024-06-01"), new Date("2026-08-01"), reservs); 
+ * 
  * @param dateS The wanted starting date of the booking 
  * @param dateE The end date of the booking 
  * @param spot The parking spot that is being checked if empty 
@@ -341,6 +376,17 @@ export function is_booked(dateS: Date, dateE: Date,
 
 /**
  * Finds unbooked spots for the user to choose from 
+ * @example
+ * const park = {name: "test", 
+ *               spots: [null, null, null], 
+ *               parked: [], 
+ *               reserved: [[0, 0, []],
+ *                          [0, 0, []],
+ *                          [0, 0, []]]}
+ * 
+ * //returns [0, 1, 2]
+ * find_unbooked(new Date("2024-02-01"), new Date("2024-02-02"), park);
+ * 
  * @param dateStart The start time of the users booking 
  * @param dateEnd The end time of the users booking 
  * @param parking The parking lot the user wants to park at 
@@ -360,6 +406,27 @@ export function find_unbooked(dateStart: Date, dateEnd: Date,
 
 /**
  * Checks if a parking spot is empty or not. 
+ * @example
+ * const park1 = {name: "test", 
+ *               spots: [null, null, null], 
+ *               parked: [], 
+ *               reserved: [[0, 0, []],
+ *                          [0, 0, []],
+ *                          [0, 0, []]]}
+ * 
+ * const park2 = {name: "test", 
+ *               spots: [null, 1, null], 
+ *               parked: [], 
+ *               reserved: [[0, 0, []],
+ *                          [0, 0, []],
+ *                          [0, 0, []]]}
+ * 
+ * //Will return true 
+ * is_empty_spot(park1, spot: 1);
+ * 
+ * //Will return false 
+ * is_empty_spot(park2, spot: 1);
+ * 
  * @param parking The parking lot you want to look at 
  * @param spot the parking spot you are checking
  * @returns Returns true if the spot is empty and false if not 
@@ -412,6 +479,23 @@ export function enqueue<T>(prio: number, e: T, q: Prio_Queue<T>) {
 /**
  * Function that looks if a person have made a reservation or not at a 
  * specific spot 
+ * @example 
+ * const reservs = [0, 
+ *                  2,
+ *                  [[202401202000, {person: 200011200000,
+ *                                   dateStart: new Date("2024-01-20 20:00"),
+ *                                   dateEnd: new Date("2024-05-23 20:00")}], 
+ *                   [202507080900, {person: 198009090000,
+ *                                   dateStart: new Date("2025-07-08 09:00"),
+ *                                   dateEnd: new Date("2025-09-08 09:00")}]]];
+ * 
+ * //Will return the second reservation in the queue
+ * find_person(reservs, 198009090000);
+ * 
+ * //Returns undefined 
+ * find_person(reservs, 199922222222); 
+ * 
+ * 
  * @param reservations is the priority queue with the reservations for a 
  *          specific spot 
  * @param person is the ID of the person whose reservation we are looking for 
@@ -432,6 +516,13 @@ export function find_person(reservations: Reservations,
 
 /**
  * Checks wether or not todays date is within the starting date and end date 
+ * @example 
+ * //will return true (untill year 3000)
+ * is_within_date(new Date("2024-02-01"), new Date("3000-02-01"));
+ * 
+ * //returns false 
+ * is_within_date(new Date("2023-02-01"), new Date("2023-04-01"));
+ * 
  * @param dateS the starting date 
  * @param dateE the end date 
  * @returns returns true if todays date is within the starting and end date
@@ -451,6 +542,32 @@ export function is_within_date(dateS: Date, dateE: Date): boolean {
  * Starts the parking timer that will warn the user when their time is out 
  * Inserts the person parking in the parked array int the parking table to 
  * symbolize that the spot is occupied 
+ * @example
+ * const reservs = [0, 
+ *                  2,
+ *                  [[202401202000, {person: 200011200000,
+ *                                   dateStart: new Date("2024-01-20 20:00"),
+ *                                   dateEnd: new Date("2024-12-23 20:00")}], 
+ *                   [202507080900, {person: 198009090000,
+ *                                   dateStart: new Date("2025-07-08 09:00"),
+ *                                   dateEnd: new Date("2025-09-08 09:00")}]]];
+ * 
+ * const park = {name: "test", 
+ *               spots: [null, null, null], 
+ *               parked: [], 
+ *               reserved: [[0, 0, [reservs]],
+ *                          [0, 0, []],
+ *                          [0, 0, []]]}
+ * 
+ * //returns true (unless todays date is a later date than 2024-12-23 20:00)
+ * park_at(park, 0, 200011200000); 
+ * 
+ * //returns false (does not have a reservation for that spot)
+ * park_at(park, 1, 200011200000);
+ * 
+ * //shows changes done to parkingTable
+ * console.log(park)
+ * 
  * @param parking The parking table that the user wants to park at 
  * @param spot The parking spot that the user wants to park
  * @param person The user's ID
@@ -540,16 +657,22 @@ export function park_at(park: ParkingTable, spot: number,
     } else {}
     insertAt(spot);
     update_park("saved_parking_lots.json", parking); 
-    const history = create_history_record(parking.name, spot.toString(), reservation.dateStart, reservation.dateEnd);
-                const table = load_history_from_file(history_file);
-                const hf_record = find_history_fine(person, table);
-                if (hf_record === undefined) {
-                    const new_hf = create_history_fine_record(history);
-                    add_to_history_hashtable(new_hf, person, table);
-                } else {
-                    add_history_to_hf_record(history, hf_record);
-                }
-                save_history_to_file(history_file, table);
+    const history = create_history_record(parking.name, spot.toString(), 
+                                          reservation.dateStart, 
+                                          reservation.dateEnd);
+
+    const table = load_history_from_file(history_file);
+    const hf_record = find_history_fine(person, table);
+
+    if (hf_record === undefined) {
+        const new_hf = create_history_fine_record(history);
+        add_to_history_hashtable(new_hf, person, table);
+
+    } else {
+        add_history_to_hf_record(history, hf_record);
+    }
+
+    save_history_to_file(history_file, table);
     return true; 
 }
 
@@ -557,6 +680,32 @@ export function park_at(park: ParkingTable, spot: number,
  * The user leaves the spot they were parked at, removes the user's reservation
  * from the reservations queue (stored in the parking table). It also removes 
  * any bookings prior to the one that is being removed from the queue.
+ * @example
+ * const reservs = [0, 
+ *                  2,
+ *                  [[202401202000, {person: 200011200000,
+ *                                   dateStart: new Date("2024-01-20 20:00"),
+ *                                   dateEnd: new Date("2024-12-23 20:00")}], 
+ *                   [202507080900, {person: 198009090000,
+ *                                   dateStart: new Date("2025-07-08 09:00"),
+ *                                   dateEnd: new Date("2025-09-08 09:00")}]]];
+ * 
+ * const park = {name: "test", 
+ *               spots: [0, null, null], 
+ *               parked: [200011200000, undefined, undefined], 
+ *               reserved: [[0, 0, [reservs]],
+ *                          [0, 0, []],
+ *                          [0, 0, []]]}
+ * 
+ * //returns true 
+ * leave_spot(park, 0, 200011200000);
+ * 
+ * //returns false (noone is parked at spot 1)
+ * leave_spot(park, 1, 200011200000);
+ * 
+ * //shows changes done to parkingTable
+ * console.log(park)
+ * 
  * @param parking the parking lot 
  * @param spot the parking spot the user is leaving 
  * @param person the user's ID 
