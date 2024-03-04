@@ -88,12 +88,9 @@ function login_or_signup() {
     }
 }
 
-
 function create_account() {
     console.log("");
-    console.log(user_hashtable);
     const created_user = ud.create_and_add_user_to_table(user_hashtable);
-    console.log(user_hashtable);
     const welcome = `Welcome ${created_user.name1} ${created_user.name2}.`;
     loggedin_user = created_user.id;
     console.log(welcome);
