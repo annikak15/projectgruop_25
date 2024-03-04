@@ -1,5 +1,5 @@
 
-import { list } from "../../lib/list";
+import { list } from "./lib/list";
 import * as ud from "./user_data"
 
 //Is valid functions
@@ -386,7 +386,7 @@ test("Find a history-fine record in a hashtable", () => {
         history: list(history),
         fine: undefined
     };
-    expect(hf_record).toEqual(result);
+    expect(JSON.stringify(hf_record)).toEqual(JSON.stringify(result));
 })
 
 test("Get a history record from a history-fine record", () => {

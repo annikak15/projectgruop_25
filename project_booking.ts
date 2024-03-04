@@ -390,7 +390,7 @@ export function park_at(park: ParkingTable, spot: number,
         save_history_to_file(history_file, load_history_from_file(history_file));
         return true;
 
-    } else {}
+    }
     insertAt(spot);
     update_park("saved_parking_lots.json", parking); 
     const history = create_history_record(parking.name, spot.toString(), reservation.dateStart, reservation.dateEnd);

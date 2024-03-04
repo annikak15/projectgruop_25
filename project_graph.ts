@@ -1,9 +1,9 @@
 import {
     type List, list, for_each, filter, pair, head, tail, list_ref, reverse, append, map, length, is_null
-} from '../../lib/list';
+} from './lib/list';
 import {
     type ListGraph, build_array
-} from '../../lib/graphs';
+} from './lib/graphs';
 import * as PromptSync from "prompt-sync";
 const prompt: PromptSync.Prompt = PromptSync({ sigint: true });
 

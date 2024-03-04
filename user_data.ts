@@ -4,7 +4,7 @@ import {
 } from './lib/hashtables'
 import {
     type List, list, pair, type Pair, append
-} from '../../lib/list';
+} from './lib/list';
 import * as fs from 'fs';
 const ps = require("prompt-sync");
 const prompt = ps({ sigint: true });
