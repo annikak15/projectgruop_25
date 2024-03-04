@@ -1,21 +1,22 @@
 
 import {
     type List, list, for_each, filter, pair, tail, list_ref, reverse, append, map, length, is_null
-} from '../../lib/list';
+} from '../../PKD/lib/list';
 
 import {
     type ListGraph, build_array
-} from '../../lib/graphs';
+} from '../../PKD/lib/graphs';
 
 import { Prio_Queue, empty, dequeue, qhead, is_empty, display_queue, swap
 
-} from '../../lib/prio_queue'
+} from '../../PKD/lib/prio_queue'
 
 
 /**
  * Represents an edge in a weighted graph with a target node and an edge weight.
  * @param target The index of the node that this edge leads to.
- * @param weight the weight (value, distance, cost) for traversing this edge. 
+ * @param weight the weight (value, distance, cost) for traversing this edge
+ * @invariant target and weight must be positive integers.  
  */
 type WeightedEdge =  {
     target: number; 
@@ -28,9 +29,41 @@ type WeightedEdge =  {
  *            to a node in the graph. Each element in the array is a list
  *            of `WeightedEdge` record, representing all edges extending from that node.
  * @param size The total number of nodes in the graph.
- * @invariant size needs represent the number of nodes correctly.  
+ * @invariant size needs represent the number of nodes correctly.
+ * 
+ * VALID CASE:
+ * const graph_valid = {
+ * adj: [
+ *          list({target: 1, weight: 1}),
+ *          list({target: 0, weight: 1}, {target: 2, weight: 2}),
+ *          list({target: 1, weight: 2}) 
+ *       ],
+ * size: 3
+ * };
+ * 
+ * BORDERLINE CASE:
+ * The size is incorrect, this will add extra null and infinity in the result when running dijkstra's algorithm.
+ * const graph_borderline = {
+ * adj: [
+ *          list({target: 1, weight: 1}),
+ *          list({target: 0, weight: 1}, {target: 2, weight: 2}),
+ *          list({target: 1, weight: 2}) 
+ *       ],
+ * size: 3
+ * };
+ * 
+ * INVALID CASE:
+ * Edge has a negativ value. 
+ * const graph_invalid = {
+ * adj: [
+ *          list({target: 1, weight: -1}),
+ *          list({target: 0, weight: -1}, {target: 2, weight: 2}),
+ *          list({target: 1, weight: 2}) 
+ *       ],
+ * size: 3
+ * };
  */    
-                             
+
  export type WeightedAdjacencyList = {
    adj: Array<List<WeightedEdge>>, 
    size: number 
@@ -209,14 +242,14 @@ export function enqueue<T>(prio: number, e: T, q: Prio_Queue<T>) {
 export function Dijkstras_alg(Graph: WeightedAdjacencyList, startNode: number): Parents_and_distance | null {
 
     if (startNode < 0 || startNode >= Graph.size || Graph.size === 0) {
-        console.log("Error: Empty graph or start node does not exist in the graph.");
-        return null;
+    console.log("Error: Empty graph or start node does not exist in the graph.");
+    return null;
     }
 
     const size: number = Graph.size
     const parents: Array<number | null> = build_array(size, () => null); 
     const distance: Array<number> = build_array(size, () => Infinity); 
-    const visited: Array<boolean> = build_array(size, ()=> false); 
+    console.log(distance[1]);
     let queue: Prio_Queue<number> = empty<number>();
 
     distance[startNode] = 0; 
@@ -225,10 +258,13 @@ export function Dijkstras_alg(Graph: WeightedAdjacencyList, startNode: number): 
     while (!is_empty(queue) ) {
         const currentnode: number = qhead(queue); 
         dequeue(queue)!;
+
+        console.log(currentnode); 
         
         const current_adjlist = Graph.adj[currentnode];
 
-        if (current_adjlist !== undefined) {
+
+       if (current_adjlist !== undefined) { 
             const adjlist_len = length(current_adjlist);
 
         for (let i = 0; i < adjlist_len; i = i + 1) {
@@ -265,7 +301,7 @@ export function Dijkstras_alg(Graph: WeightedAdjacencyList, startNode: number): 
  * @param Graph The graph represented as a weighted adjacency list, 
  * where each node is connected to its neighbors with edges that have positive weights.
  * @param startnode The index of the node from which to start the pathfinding, represented as a positive integer. 
- * @precondition Graph can't have negative weight values.
+ * @precondition Graph can't have negative weight values. Starnode must be a positive integer. 
  * @precondtion The variable All_Parking_lots need to be defined accordingly. 
  * @example Find_parking_lots(graph_uppsala, 0), will return ["Aimo park - Ångströmslaboratoriet - 1 min","Aimo parkering - Husargatan (Hemköp) - 3 min",
             "Studenternas IP parkering - 5 min","Aimo park Grimhild - 11 min","Centralgaraget - 15 min"]. Assuming graph_uppsala has not been updated. 
@@ -280,6 +316,7 @@ export function Find_Parking_lots(Graph: WeightedAdjacencyList, startnode: numbe
     if (is_null(result)) {
         return; 
     }
+
    
     const distance = result.distances;
     const parking_lots = All_Parking_lots.list_of_all_parking;
@@ -287,7 +324,7 @@ export function Find_Parking_lots(Graph: WeightedAdjacencyList, startnode: numbe
     let parking_information: Array<parking_info> = [];
     let parking_all_info: Array<findparking> = [];
     
-
+   
     for ( let i = 0; i < number_of_parking_lots; i = i + 1) { 
         const parking = parking_lots[i];
         parking_information.push(parking); 
@@ -306,6 +343,7 @@ export function Find_Parking_lots(Graph: WeightedAdjacencyList, startnode: numbe
 
         }
    }
+   
 
     if (parking_all_info.length === 0) {
         console.log("No parking lots are reachable from the start node.");
@@ -323,7 +361,11 @@ export function Find_Parking_lots(Graph: WeightedAdjacencyList, startnode: numbe
         ParkingLotNamesAndDistances.push(nameAndDistance);
     }
 
+   
+
     return ParkingLotNamesAndDistances;
+
+
 }
 
 /**
@@ -354,7 +396,7 @@ export const graph_uppsala: WeightedAdjacencyList = {
         //node 5 =  "Aimo park - Ångströmslaboratoriet" 
         list({ target: 0, weight: 1 }),
     
-        //node 6 =  "Centralgara
+        //node 6 =  "Centralgaraget 
         list ({target: 1, weight: 2}),
 
         //node 7 = BMC
@@ -366,7 +408,5 @@ export const graph_uppsala: WeightedAdjacencyList = {
       ],
 
       size: 9
-}; 
+};
 
-
-console.log(JSON.stringify(Find_Parking_lots(graph_uppsala, 0)));
