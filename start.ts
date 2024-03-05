@@ -1,21 +1,31 @@
-// Starts the app
 import * as ud from './user_data';
 import * as gq from './project_graph_queue';
-//import * as ps from "prompt-sync";
 var prompt = require('prompt-sync')();
 
 import { ask_date, ask_park, parking, leave} from './booking_prompts';
 import { for_each } from './lib/list';
-//const prompt: ps.Prompt = ps({ sigint: true });
 
-// Files
+/**
+ * The file containing the serialized user record hash table
+ */
 const user_file = "./saved_user_data.json";
+/**
+ * The file containing the serialized user history-fine record hash table
+ */
 const history_file = "./saved_history_data.json"
 
+/**
+ * The deserialized hashtable to store user records.
+ */
 const user_hashtable: ud.user_table = ud.load_user_hashtable_from_file(user_file);
+/**
+ * The deserialized hashtable to store history-fine records.
+ */
 const history_table: ud.history_table = ud.load_history_from_file(history_file);
 
-
+/**
+ * The name of the app written in serveral strings collected in an object.
+ */
 const app_name = [
    " ____   ____  ____   __  _  ____  ____    ____      ____   __ __  ___    ___    __ __  ",
    " |    \ /    ||    \ |  |/ ]|    ||    \  /    |    |    \ |  |  ||   \  |   \  |  |  |",
@@ -26,6 +36,10 @@ const app_name = [
    " |__|  |__|__||__|\_||__|\_||____||__|__||___,_|    |_____| \__,_||_____||_____||____/ ",
    "                                                                                       "
 ];
+/**
+ * The logo of a car representing Parking Buddy.
+ * Written in serveral strings collected in an object.
+ */
 const logo = [
     "................................................................................",
     "......................................,I7777777777777=................7.........",
@@ -52,17 +66,22 @@ const logo = [
     "................................................................................"
 ];
 
+/**
+ * The global variable holding the personal id of the logged in user.
+ */
 let loggedin_user: ud.user_id_number;
-let current_user = 0;
 
-
-//Function ask_date showing prompts before called????
-
+/**
+ * Initializes the Parking Buddy application by displaying a welcome message and prompting the user to log in or sign up.
+ */
 function start() {
     message_first_visit();
     login_or_signup();
 }
 
+/**
+ * Displays the welcome message and logo for first-time visitors of the Parking Buddy application.
+ */
 function message_first_visit(): void {
     app_name.forEach(line => console.log(line));
     logo.forEach(line => console.log(line.replace(/\./g, ' ')));
@@ -70,6 +89,9 @@ function message_first_visit(): void {
     console.log("");
 }
 
+/**
+ * Guides the user to either log in with an existing account or create a new account.
+ */
 function login_or_signup() {
     console.log("Log in or create account to acces Parking Buddy's services.");
     console.log("");
@@ -88,6 +110,9 @@ function login_or_signup() {
     }
 }
 
+/**
+ * Handles the process of creating a new user account by adding user information to the user hashtable.
+ */
 function create_account() {
     console.log("");
     const created_user = ud.create_and_add_user_to_table(user_hashtable);
@@ -98,13 +123,16 @@ function create_account() {
     homepage_options();
 }
 
+/**
+ * Manages the user login process by verifying the entered personal ID against the user hashtable.
+ * @param {ud.user_table} hashtable - Hashtable containing user records.
+ */
 function login(hashtable: ud.user_table) {
     console.log("Enter personal ID:")
     const user = prompt("");
         if (user !== null) {
             const user_int = +user;
             loggedin_user = user_int;
-            current_user = user_int;
             const lookup = ud.find_user_record(user_int, hashtable);
             
             if (lookup?.id === user_int) {
@@ -122,6 +150,9 @@ function login(hashtable: ud.user_table) {
         
 }
 
+/**
+ * Displays the homepage options and prompts the user to choose an option.
+ */
 export function homepage_options() {
     console.log("");
     console.log("What do you want to do?");
@@ -168,6 +199,9 @@ export function homepage_options() {
     }
 }
 
+/**
+ * Displays a prompt for the user to return to the homepage.
+ */
 export function press_homepage() {
     console.log("")
     console.log("Press enter to go back to home menu.");
@@ -177,7 +211,11 @@ export function press_homepage() {
 
 // User history functions
 
-function display_history_fine(table: ud.history_table) {
+/**
+ * Displays the parking and fine history associated with the logged-in user.
+ * @param {ud.history_table} table The table containing parking history.
+ */
+function display_history_fine(table: ud.history_table): void {
     // Retrieve parking history and fine history associated with the logged-in user
     const record = ud.find_history_fine(loggedin_user, table);
 
@@ -209,10 +247,18 @@ function display_history_fine(table: ud.history_table) {
     }
 }
 
+/**
+ * Displays the parking history record.
+ * @param {ud.history_record} userHistory The user's parking history record.
+ */
 function display_history(userHistory: ud.history_record): void {
     console.log(`Area: ${userHistory?.area}, Spot: ${userHistory?.spot}, Start: ${userHistory?.start}, End: ${userHistory?.end}`);
 }
 
+/**
+ * Displays the fine history record.
+ * @param {ud.fine_record} userFineHistory The user's fine history record.
+ */
 function display_fine(userFineHistory: ud.fine_record): void {
     console.log(`Info: ${userFineHistory.info.area}, Cost: ${userFineHistory.cost}`);
 }
@@ -220,7 +266,11 @@ function display_fine(userFineHistory: ud.fine_record): void {
 
 // Parking functions
 
-function find_parking() {
+/**
+ * Initiates the process to find and book parking based on user location input
+ *  and displays closest parking lots.
+ */
+function find_parking(): void {
     console.log('What is your location: 1 - Ångström, 2 - Centralen, 3 - BMC, 4 - Akademiska sjukhuset: ');
     const answer_place = prompt("");
     console.log("");
@@ -247,7 +297,12 @@ function find_parking() {
         find_parking();
     }
 }
-function book_parking() {
+
+/**
+ * Asks the user if they want to book parking and either calls booking
+ * function or not, depending on users prompt.
+ */
+function book_parking(): void {
     console.log('Do you want to book parking? (yes/no):')
     const answer = prompt("")
     console.log("");
@@ -271,7 +326,11 @@ function book_parking() {
 
 // User information
 
-function user_info(user: number) {
+/**
+ * Displays the user's personal information from the user record.
+ * @param {number} user The user's ID.
+ */
+function user_info(user: number): void {
     const info = ud.find_user_record(loggedin_user, user_hashtable);
     if (info) {
         console.log("First name: ", info.name1);
@@ -289,7 +348,12 @@ function user_info(user: number) {
     
 }
 
-function exit_app() {
+// Log out option
+
+/**
+ * Exits the application after saving data.
+ */
+function exit_app(): void {
     console.log("");
     console.log("Closing Parking Buddy.");
     ud.save_user_hash_to_file(user_file, user_hashtable);
